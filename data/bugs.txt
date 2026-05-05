@@ -1,0 +1,10 @@
+Bug: User unable to login when password contains special characters | Severity: High | Module: Auth
+Bug: Login API returns 500 error on invalid credentials | Severity: Critical | Module: API
+Bug: Session not created after successful login | Severity: High | Module: Session
+Bug: Login fails on mobile devices | Severity: Medium | Module: UI
+Bug: Login API returns 500 on invalid payload | Severity: High | Module: API
+Bug: SQL injection possible in login field | Severity: Critical | Module: Security
+Bug: No rate limiting on login API | Severity: Critical | Module: Security
+Bug: XSS vulnerability in login error message | Severity: Critical | Module: Security
+Bug: Account lock not triggered after multiple failed login attempts | Severity: High | Module: Auth
+Bug: Login response time exceeds 5 seconds under load | Severity: Medium | Module: Performance

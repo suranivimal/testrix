@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Testrix</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f6f8;
+        }
+
+        /* Navbar */
+        .navbar {
+            background: #111827;
+            color: white;
+            padding: 15px 20px;
+            font-size: 18px;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 100px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            margin-top: 10px;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .primary { background: #2563eb; color: white; }
+        .secondary { background: #10b981; color: white; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0px 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .big {
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            color: white;
+        }
+
+        .critical { background: red; }
+        .high { background: orange; }
+        .medium { background: #3b82f6; }
+        .low { background: gray; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+
+        th {
+            background: #2563eb;
+            color: white;
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        input {
+            padding: 8px;
+            margin-top: 10px;
+            width: 300px;
+        }
+
+        pre {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 300px;
+            overflow: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="navbar">
+    🚀 Testrix — Smarter Testing. Faster Releases.
+</div>
+
+<div class="container">
+
+    <textarea id="input" placeholder="Enter bug or feature..."></textarea><br>
+
+    <button class="primary" onclick="runQA()">Analyze</button>
+    <button class="secondary" onclick="downloadCSV()">Download CSV</button>
+
+    <!-- KPIs -->
+    <div class="grid">
+        <div class="card">
+            <div>Severity</div>
+            <div id="severity" class="big">-</div>
+        </div>
+
+        <div class="card">
+            <div>Total Test Cases</div>
+            <div id="count" class="big">0</div>
+        </div>
+
+        <div class="card">
+            <div>Security Checks</div>
+            <div id="security" class="big">0</div>
+        </div>
+    </div>
+
+    <!-- Search -->
+    <input type="text" id="search" placeholder="Search test cases..." onkeyup="filterTable()" />
+
+    <div class="row">
+
+        <!-- Bug Analysis -->
+        <div class="card">
+            <h3>🐞 Bug Analysis</h3>
+            <pre id="bug">No data</pre>
+        </div>
+
+        <!-- Test Cases -->
+        <div class="card">
+            <h3>🧪 Test Cases</h3>
+            <table id="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Title</th>
+                        <th>Priority</th>
+                        <th>Expected</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="4">No data</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+let globalTests = [];
+
+async function runQA() {
+    const input = document.getElementById("input").value;
+
+    // Loading state
+    document.getElementById("bug").textContent = "Loading...";
+    document.querySelector("#table tbody").innerHTML =
+        "<tr><td colspan='4'>Loading...</td></tr>";
+
+    try {
+        const res = await fetch("/qa-ai", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ input_text: input })
+        });
+
+        const data = await res.json();
+        const result = data.result;
+
+        // Bug
+        document.getElementById("bug").textContent =
+            JSON.stringify(result.bug_analysis, null, 2);
+
+        // Severity
+        const severity = result.bug_analysis?.bug?.severity || "-";
+        document.getElementById("severity").innerHTML =
+            `<span class="badge ${severity.toLowerCase()}">${severity}</span>`;
+
+        // KPIs
+        const tests = result.test_cases || [];
+        globalTests = tests;
+
+        document.getElementById("count").textContent = tests.length;
+        document.getElementById("security").textContent =
+            result.bug_analysis?.securityPayloads?.length || 0;
+
+        renderTable(tests);
+
+    } catch (e) {
+        document.getElementById("bug").textContent = "Error loading data";
+    }
+}
+
+function renderTable(tests) {
+    const tbody = document.querySelector("#table tbody");
+    tbody.innerHTML = "";
+
+    if (!tests.length) {
+        tbody.innerHTML = "<tr><td colspan='4'>No data</td></tr>";
+        return;
+    }
+
+    tests.forEach(tc => {
+        const expected =
+            tc.expected?.status ||
+            tc.expectedResponse?.statusCode ||
+            "-";
+
+        const row = `
+            <tr>
+                <td>${tc.id || ""}</td>
+                <td>${tc.title || ""}</td>
+                <td>${tc.priority || "-"}</td>
+                <td>${expected}</td>
+            </tr>
+        `;
+
+        tbody.innerHTML += row;
+    });
+}
+
+function filterTable() {
+    const keyword = document.getElementById("search").value.toLowerCase();
+
+    const filtered = globalTests.filter(tc =>
+        (tc.title || "").toLowerCase().includes(keyword)
+    );
+
+    renderTable(filtered);
+}
+
+function downloadCSV() {
+    if (!globalTests.length) return;
+
+    let csv = "ID,Title,Priority,Expected\n";
+
+    globalTests.forEach(tc => {
+        const expected =
+            tc.expected?.status ||
+            tc.expectedResponse?.statusCode ||
+            "-";
+
+        csv += `${tc.id},${tc.title},${tc.priority},${expected}\n`;
+    });
+
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "test_cases.csv";
+    a.click();
+}
+
+</script>
+
+</body>
+</html>

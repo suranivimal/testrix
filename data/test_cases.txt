@@ -1,0 +1,4 @@
+Test: Login with special characters password
+Test: Login API response validation
+Test: Session creation after login
+Test: Mobile login validation
