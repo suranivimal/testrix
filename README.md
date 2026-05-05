@@ -1,70 +1,89 @@
-# 🚀 Testrix — AI-Powered QA Intelligence Platform
+# 🚀 Testrix — AI QA Intelligence Platform
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue)
 ![FastAPI](https://img.shields.io/badge/FastAPI-Backend-green)
 ![AI](https://img.shields.io/badge/AI-LLM-orange)
-
-Testrix is an intelligent QA system that uses **AI + RAG + Agents** to automate software testing workflows.
-
-It goes beyond traditional automation by:
-
-* Understanding bugs
-* Generating test cases
-* Suggesting fixes
-* Performing security-focused QA analysis
+![Status](https://img.shields.io/badge/Status-Active-success)
 
 ---
 
-## 📸 Dashboard
+## 🧠 Overview
 
+Testrix is an **AI-powered QA system** designed to automate and enhance software testing workflows using:
+
+* 🤖 AI (LLM-based reasoning)
+* 🔍 RAG (context-aware analysis)
+* 🧩 Agent-based architecture
+
+It transforms QA from **manual effort → intelligent decision-making**.
+
+---
+
+## 📸 Dashboard Preview
+
+```md
 ![Dashboard](ui/screenshot.png)
-
----
-
-## ✨ Key Features
-
-* 🧠 AI Bug Analysis (Root cause + Fix suggestion)
-* 🧪 Smart Test Case Generation (Positive / Negative / Edge)
-* 🔐 Security Testing (SQL Injection, XSS, Rate Limiting)
-* ⚡ RAG-based Context Awareness (logs, bugs, history)
-* 🤖 Agent-based Architecture (modular QA intelligence)
-* 📊 SaaS Dashboard UI
-
----
-
-## 🚀 Live Demo Flow
-
-1. Open dashboard
-2. Enter bug like:
-
 ```
+
+---
+
+## ⚡ Key Capabilities
+
+### 🐞 Bug Intelligence
+
+* Root cause analysis
+* Severity detection
+* Fix recommendations
+
+### 🧪 Test Automation (AI-generated)
+
+* Positive test cases
+* Negative scenarios
+* Edge cases
+
+### 🔐 Security Testing
+
+* SQL Injection detection
+* XSS payload testing
+* Rate limit validation
+
+### 🧠 Smart Context (RAG)
+
+* Uses previous bugs/logs
+* Improves accuracy dynamically
+
+---
+
+## 🚀 Demo Flow
+
+### Input:
+
+```text
 Login API returns 500 error on invalid credentials
 ```
 
-3. Click **Analyze**
-
 ### Output:
 
-* Bug severity
-* Root cause
-* API test cases
-* Security tests
-* Fix suggestion
+* Severity: Critical
+* Root Cause: Error handling issue
+* API Test Cases
+* Security payloads
+* Fix suggestions
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ System Architecture
 
 ```
 User Input
    ↓
 Agent Manager
    ↓
--------------------------
-| Bug Agent             |
-| Test Case Agent       |
-| Security Agent        |
--------------------------
+--------------------------
+| Bug Agent              |
+| Test Case Agent        |
+| Security Agent         |
+--------------------------
    ↓
 LLM (Groq/OpenAI)
    ↓
@@ -77,11 +96,13 @@ Dashboard UI
 
 ## 🛠️ Tech Stack
 
-* **Backend:** FastAPI (Python)
-* **AI Layer:** LLM (Groq / OpenAI)
-* **RAG:** Vector search (context-based QA)
-* **Frontend:** HTML, CSS, JS (Dashboard)
-* **Architecture:** Agent-based system
+| Layer        | Technology        |
+| ------------ | ----------------- |
+| Backend      | FastAPI (Python)  |
+| AI Engine    | LLM (Groq/OpenAI) |
+| RAG          | Vector Search     |
+| Frontend     | HTML + JS         |
+| Architecture | Agent-based       |
 
 ---
 
@@ -90,12 +111,12 @@ Dashboard UI
 ```
 testrix/
 │
-├── agents/                # AI agents
-├── ai_engine/             # LLM integration
-├── rag/                   # context + vector search
-├── services/              # business logic
-├── ui/                    # dashboard UI
-├── app.py                 # FastAPI entry
+├── agents/              # AI agents (bug, test cases)
+├── ai_engine/           # LLM integration
+├── rag/                 # context + vector DB
+├── services/            # core logic
+├── ui/                  # dashboard UI
+├── app.py               # FastAPI entry
 ├── requirements.txt
 ├── README.md
 └── .gitignore
@@ -103,7 +124,7 @@ testrix/
 
 ---
 
-## ⚙️ Setup & Run
+## ⚙️ Installation & Setup
 
 ### 1. Clone repository
 
@@ -122,7 +143,7 @@ pip install -r requirements.txt
 
 ---
 
-### 3. Add API Key
+### 3. Setup environment
 
 Create `.env` file:
 
@@ -132,7 +153,7 @@ GROQ_API_KEY=your_api_key_here
 
 ---
 
-### 4. Run server
+### 4. Run application
 
 ```bash
 uvicorn app:app --reload
@@ -140,58 +161,65 @@ uvicorn app:app --reload
 
 ---
 
-## 🌐 Access
+## 🌐 Access Points
 
-* API Docs:
-  http://127.0.0.1:8000/docs
-
-* Dashboard UI:
-  http://127.0.0.1:8000/ui/index.html
-
----
-
-## 🧪 Example Use Case
-
-**Input:**
-
-```
-Login API returns 500 error on invalid credentials
-```
-
-**Output:**
-
-* Severity: Critical
-* Root Cause: Error handling issue
-* API Test Cases
-* Security Tests
-* Fix Suggestions
+| Service      | URL                                 |
+| ------------ | ----------------------------------- |
+| API Docs     | http://127.0.0.1:8000/docs          |
+| Dashboard UI | http://127.0.0.1:8000/ui/index.html |
 
 ---
 
-## 🔮 Future Enhancements
+## 🧪 Example API Usage
 
-* 🔐 User authentication (multi-user SaaS)
-* 🗂️ History tracking (database)
+```bash
+POST /qa-ai
+```
+
+```json
+{
+  "input_text": "Login API returns 500 error"
+}
+```
+
+---
+
+## 🔮 Roadmap
+
+* 🔐 Authentication (multi-user SaaS)
+* 🗂️ Bug/Test history storage (MongoDB)
 * ⚙️ CI/CD integration
-* 🤖 Playwright/Selenium auto execution
+* 🤖 Playwright automation execution
 * ☁️ Cloud deployment (Render / Railway)
 
 ---
 
 ## 💡 Why Testrix?
 
-Testrix transforms QA from:
-
-* Manual testing ❌
-* Static automation ❌
-
-Into:
-
-* Intelligent QA decisions ✅
-* Automated insights ✅
+| Traditional QA   | Testrix                 |
+| ---------------- | ----------------------- |
+| Manual testing   | AI-driven insights      |
+| Static scripts   | Dynamic test generation |
+| Slow debugging   | Instant root cause      |
+| Limited coverage | Smart coverage          |
 
 ---
 
 ## 👨‍💻 Author
 
-Built by Vimal Surani🚀
+**Vimal Surani**
+
+---
+
+## ⭐ Support
+
+If you like this project:
+
+👉 Star the repo
+👉 Share with others
+
+---
+
+## 📜 License
+
+MIT License
