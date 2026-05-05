@@ -21,9 +21,7 @@ It transforms QA from **manual effort → intelligent decision-making**.
 
 ## 📸 Dashboard Preview
 
-```md
 ![Dashboard](ui/screenshot.png)
-```
 
 ---
 
