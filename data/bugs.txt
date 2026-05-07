@@ -8,3 +8,28 @@ Bug: No rate limiting on login API | Severity: Critical | Module: Security
 Bug: XSS vulnerability in login error message | Severity: Critical | Module: Security
 Bug: Account lock not triggered after multiple failed login attempts | Severity: High | Module: Auth
 Bug: Login response time exceeds 5 seconds under load | Severity: Medium | Module: Performance
+Bug: Payment API returns 200 on declined card instead of 402 | Severity: Critical | Module: Payments
+Bug: Duplicate charge created when user double-clicks checkout button | Severity: Critical | Module: Payments
+Bug: Payment webhook not verified with HMAC signature | Severity: Critical | Module: Security
+Bug: CVV field stores raw value in database | Severity: Critical | Module: Security
+Bug: Payment timeout not handled gracefully, leaves order in pending state | Severity: High | Module: Payments
+Bug: User registration allows duplicate email addresses | Severity: High | Module: Auth
+Bug: Password reset token does not expire after 24 hours | Severity: High | Module: Auth
+Bug: Registration API accepts invalid email format | Severity: Medium | Module: Validation
+Bug: User profile update allows setting negative age value | Severity: Medium | Module: Validation
+Bug: File upload endpoint accepts executable files (.exe, .sh) | Severity: Critical | Module: Security
+Bug: File upload size limit not enforced, allows 1GB files | Severity: High | Module: Performance
+Bug: Uploaded file path exposed in API response | Severity: High | Module: Security
+Bug: Search API vulnerable to NoSQL injection via unvalidated query param | Severity: Critical | Module: Security
+Bug: Search returns results from other users' private data | Severity: Critical | Module: Security
+Bug: Search pagination returns duplicate results on page boundary | Severity: Medium | Module: API
+Bug: JWT token not invalidated on logout | Severity: High | Module: Auth
+Bug: Refresh token reuse attack possible — old tokens still valid after refresh | Severity: Critical | Module: Security
+Bug: 2FA bypass possible by replaying OTP code within 60-second window | Severity: Critical | Module: Security
+Bug: Password reset link reuse — link stays valid after password changed | Severity: High | Module: Auth
+Bug: Admin API endpoints accessible without admin role check | Severity: Critical | Module: Authorization
+Bug: CORS misconfiguration allows any origin to call authenticated endpoints | Severity: Critical | Module: Security
+Bug: API returns full stack trace in error response on production | Severity: High | Module: Security
+Bug: Data export endpoint has no pagination, causes memory exhaustion on large datasets | Severity: High | Module: Performance
+Bug: Order status update webhook does not validate idempotency key | Severity: Medium | Module: API
+Bug: Email notification sent multiple times due to race condition in event handler | Severity: Medium | Module: Notifications

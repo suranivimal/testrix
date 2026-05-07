@@ -6,3 +6,8 @@ langchain
 langchain-community
 faiss-cpu
 sentence-transformers
+slowapi
+pymongo
+playwright
+Pillow
+httpx
