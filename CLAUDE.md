@@ -2,134 +2,163 @@
 
 ## Project Overview
 
-Testrix is an AI-powered QA automation platform that analyzes bug descriptions, generates comprehensive API test cases, and provides security testing payloads. It uses Groq's LLaMA 3.3 70B model with RAG (Retrieval-Augmented Generation) for context-aware analysis.
+Testrix is an AI-powered QA automation platform. It analyzes bug descriptions, generates API test cases and security payloads, and runs visual regression tests comparing Figma designs against live Shopify storefronts. Uses Groq LLaMA 3.3 70B (text) and LLaMA 3.2 Vision (images) with RAG for context-aware analysis.
 
 ## Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Language | Python 3.x |
+| Language | Python 3.13 |
 | Web Framework | FastAPI + Uvicorn |
-| LLM Provider | Groq API (LLaMA 3.3 70B) |
+| LLM (text) | Groq API — `llama-3.3-70b-versatile` |
+| LLM (vision) | Groq API — `llama-3.2-11b-vision-preview` |
 | Vector Store | FAISS + HuggingFace Sentence-Transformers |
+| Browser Automation | Playwright (sync, runs in thread pool) |
+| Image Processing | Pillow |
+| Database | MongoDB (pymongo) |
 | Frontend | Vanilla HTML/CSS/JS (single-page app) |
 
 ## Project Structure
 
 ```
 testrix/
-├── app.py                        # FastAPI entry point, all API routes
-├── requirements.txt              # Python dependencies
-├── .env                          # GROQ_API_KEY (not committed)
+├── app.py                          # FastAPI entry point, all API routes
+├── db.py                           # MongoDB: history + visual_qa_jobs collections
+├── requirements.txt
+├── .env                            # API keys (not committed)
+├── .env.example                    # Key reference — copy to .env
 │
 ├── agents/
-│   ├── agent_manager.py         # Orchestrates bug + test case flow
-│   └── bug_agent.py             # Bug analysis with structured JSON output
+│   ├── agent_manager.py            # Orchestrates bug + test case flow (parallel)
+│   ├── bug_agent.py                # Bug analysis → structured JSON
+│   └── visual_qa_agent.py          # Visual QA pipeline orchestrator
 │
 ├── ai_engine/
-│   ├── llm.py                   # Groq API wrapper (OpenAI-compatible)
-│   └── prompts.py               # Reusable LLM prompt templates
+│   ├── llm.py                      # Groq AsyncOpenAI wrapper
+│   ├── prompts.py                  # Reusable LLM prompt templates
+│   └── utils.py                    # JSON extraction helpers
 │
 ├── services/
-│   ├── bug_analysis_service.py  # RAG-enhanced bug analysis
-│   └── test_case_service.py     # RAG-enhanced test case generation
+│   ├── bug_analysis_service.py     # RAG-enhanced bug analysis
+│   ├── test_case_service.py        # RAG-enhanced test case generation
+│   ├── test_runner.py              # Playwright API test runner
+│   ├── figma_extractor.py          # Figma REST API — fetch + export frames
+│   ├── shopify_scraper.py          # Playwright sync scraper (SSRF-safe)
+│   ├── visual_comparator.py        # Pillow pixel diff + BFS region detection
+│   ├── visual_ai_analyzer.py       # Groq vision — batched region analysis
+│   ├── severity_classifier.py      # Rule-based + LLM severity scoring
+│   └── bug_report_generator.py     # Page + full report builder
 │
 ├── rag/
-│   ├── data_loader.py           # Loads domain knowledge from /data
-│   └── vector_store.py          # FAISS vector store, lazy-loaded & cached
+│   ├── data_loader.py              # Loads domain knowledge from /data
+│   └── vector_store.py             # FAISS vector store, lazy-loaded & cached
 │
 ├── data/
-│   ├── bugs.txt                 # Known bugs (RAG training data)
-│   └── test_cases.txt           # Example test case templates
+│   ├── bugs.txt                    # Known bugs (RAG training data)
+│   └── test_cases.txt              # Example test case templates
 │
 └── ui/
-    └── index.html               # Frontend SPA
+    └── index.html                  # Frontend SPA (Bug QA + Visual QA tabs)
 ```
 
 ## Running the Project
 
 ```bash
-# Install dependencies
 pip install -r requirements.txt
+playwright install chromium
+cp .env.example .env   # then fill in keys
 
-# Set environment variable
-# Create .env with: GROQ_API_KEY=<your_key>
-
-# Start the server
 uvicorn app:app --reload
 ```
 
-The frontend is served statically at `http://localhost:8000/ui/index.html`.
+Frontend: `http://localhost:8000/ui/index.html`
 
 ## API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | `GET` | `/` | Health check |
-| `POST` | `/qa-ai` | **Main endpoint** — combined bug analysis + test case generation |
-| `POST` | `/analyze-bug` | Agent-based bug analysis only |
-| `POST` | `/test-cases` | Legacy test case generation |
-| `POST` | `/bug-analysis` | Legacy basic bug analysis |
+| `POST` | `/qa-ai` | Main — bug analysis + test case generation |
+| `POST` | `/qa-ai/stream` | Same, SSE streaming |
+| `POST` | `/run-tests` | Execute test cases via Playwright |
+| `POST` | `/visual-qa` | Start Visual QA job (202 async, returns job_id) |
+| `GET` | `/visual-qa/{job_id}` | Poll Visual QA job status + results |
+| `GET` | `/history` | List recent analyses |
+| `GET` | `/history/{id}` | Fetch single history record |
+| `DELETE` | `/history/{id}` | Delete history record |
+| `POST` | `/analyze-bug` | Legacy — agent bug analysis only |
+| `POST` | `/test-cases` | Legacy — test case generation only |
+| `POST` | `/bug-analysis` | Legacy — basic bug analysis only |
 
-### Main Request/Response (`POST /qa-ai`)
+### Main Request (`POST /qa-ai`)
 
-**Request:**
 ```json
-{ "input": "Login fails when password contains special characters" }
+{ "input_text": "Login fails when password contains special characters" }
 ```
 
-**Response:**
+### Visual QA Request (`POST /visual-qa`)
+
 ```json
 {
-  "input": "...",
-  "bug_analysis": {
-    "bug": {},
-    "root_cause": [],
-    "expected_behavior": {},
-    "testCases": [],
-    "securityPayloads": [],
-    "regression_areas": [],
-    "fix_suggestion": ""
-  },
-  "test_cases": []
+  "shopify_url": "https://your-store.myshopify.com",
+  "figma_url": "https://www.figma.com/design/FILE_KEY/...",
+  "pages": ["home", "product", "collection", "cart"],
+  "diff_threshold": 0.05
 }
 ```
+
+Returns `{ "job_id": "..." }`. Poll `GET /visual-qa/{job_id}` until `status` is `complete` or `failed`.
 
 ## Data Flow
 
 ```
-User Input
-    └── Agent Manager (agent_manager.py)
-         ├── Bug Agent → LLM → JSON extraction → bug_analysis
-         └── Test Case Service → RAG search → LLM with context → test_cases
+Bug QA:
+User Input → Agent Manager → Bug Agent + Test Case Service (parallel)
+                           → Groq LLM + FAISS RAG → JSON → MongoDB history
+
+Visual QA:
+POST /visual-qa → MongoDB job (pending) → BackgroundTask
+    ├── Figma REST API → frames PNG @2x
+    ├── Playwright (thread pool) → Shopify screenshots
+    ├── Pillow pixel diff → BFS regions
+    ├── Groq vision → issue analysis per page
+    ├── Rule-based + LLM severity classification
+    └── MongoDB job (complete) → UI polls result
 ```
 
 ## Key Architecture Decisions
 
-- **CORS** is open (`allow_origins=["*"]`) — frontend-first design, not hardened for production.
-- **LLM model**: `llama-3.3-70b-versatile` via Groq's OpenAI-compatible endpoint.
-- **RAG retrieval**: Top-2 similarity results from FAISS, seeded from `data/bugs.txt` and `data/test_cases.txt`.
+- **CORS** is open (`allow_origins=["*"]`) — restrict before production.
+- **LLM text model**: `llama-3.3-70b-versatile` via Groq's OpenAI-compatible endpoint.
+- **LLM vision model**: `llama-3.2-11b-vision-preview` — called once per page with all diff regions batched.
+- **Playwright**: sync API running in `run_in_threadpool` — avoids Windows `SelectorEventLoop` subprocess error.
+- **RAG retrieval**: Top-2 FAISS similarity results from `data/bugs.txt` and `data/test_cases.txt`.
 - **Vector store**: Lazy-loaded on first request and cached in memory.
-- **System prompt**: LLM is prompted as "a senior QA engineer".
-- **JSON extraction**: LLM outputs are parsed with regex fallback to handle markdown-wrapped JSON blocks.
+- **Severity classification**: Critical/Low trusted from rules; LLM only called for borderline Medium/High.
+- **MongoDB**: base64 images returned in API response but stripped before saving to DB.
+- **JSON extraction**: LLM outputs parsed with regex fallback to handle markdown-wrapped JSON.
 
 ## Environment Variables
 
-| Variable | Description |
-|----------|-------------|
-| `GROQ_API_KEY` | API key for Groq LLM service |
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `GROQ_API_KEY` | Yes | Groq LLM service — text + vision |
+| `GROQ_MODEL` | No | Defaults to `llama-3.3-70b-versatile` |
+| `FIGMA_API_TOKEN` | For Visual QA | Figma Personal Access Token |
+| `MONGODB_URI` | Yes | Defaults to `mongodb://localhost:27017` |
+| `CORS_ORIGINS` | No | Defaults to `*` |
 
 ## No Test Framework
 
-There are no unit or integration tests. The system relies on LLM-generated outputs and RAG context from `data/`. To expand test coverage, `pytest` with mocked LLM responses is the recommended path.
+No unit or integration tests. The system relies on LLM-generated outputs and RAG context. To expand coverage, `pytest` with mocked LLM responses is the recommended path.
 
 ## Known Limitations
 
-- CORS allows all origins — restrict before any production deployment.
-- API key is stored in `.env`; ensure `.env` is in `.gitignore`.
-- No rate limiting on endpoints.
-- No authentication on the API.
-- LLM responses can occasionally fail JSON parsing; the fallback returns raw text.
+- CORS allows all origins — restrict `CORS_ORIGINS` before production.
+- No authentication on any endpoint.
+- Rate limiting via `slowapi`: 10 req/min on `/qa-ai` and `/visual-qa`, 20 req/min on legacy endpoints.
+- LLM responses can occasionally fail JSON parsing; regex fallback returns raw text.
+- Playwright Visual QA runs sync in a thread pool — concurrent jobs share the default pool.
 
 ## Skill routing
 
