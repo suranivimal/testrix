@@ -5,7 +5,7 @@ from fastapi.concurrency import run_in_threadpool
 
 from agents.bug_agent import analyze_bug
 from services.test_case_service import generate_test_cases
-from db import save_history
+from services.db import save_history
 
 logger = logging.getLogger(__name__)
 

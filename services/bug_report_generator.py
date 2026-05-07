@@ -2,7 +2,7 @@ import base64
 import logging
 from datetime import datetime, timezone
 
-from db import update_vqa_job
+from services.db import update_vqa_job
 from services.visual_comparator import CompareResult
 
 logger = logging.getLogger(__name__)

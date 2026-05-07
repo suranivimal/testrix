@@ -3,7 +3,7 @@ import logging
 
 from fastapi.concurrency import run_in_threadpool
 
-from db import update_vqa_job
+from services.db import update_vqa_job
 from services.bug_report_generator import build_full_report, build_page_report
 from services.figma_extractor import extract_frames
 from services.severity_classifier import classify_all

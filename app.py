@@ -20,7 +20,7 @@ from agents.bug_agent import analyze_bug as agent_analyze_bug
 from agents.agent_manager import run_qa_ai
 from services.test_runner import run_tests
 from agents.visual_qa_agent import run_visual_qa
-from db import get_history, get_history_item, delete_history_item, create_vqa_job, get_vqa_job
+from services.db import get_history, get_history_item, delete_history_item, create_vqa_job, get_vqa_job
 
 load_dotenv()
 
