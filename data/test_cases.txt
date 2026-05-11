@@ -1,0 +1,30 @@
+Test: Login with special characters password | Module: Auth | Type: Edge Case
+Test: Login API response validation for invalid credentials returns 401 | Module: Auth | Type: Negative
+Test: Session creation and token structure after successful login | Module: Session | Type: Positive
+Test: Mobile login validation with different user agents | Module: UI | Type: Compatibility
+Test: SQL injection attempt in login username field returns 400 | Module: Security | Type: Security
+Test: XSS payload in login password field sanitized correctly | Module: Security | Type: Security
+Test: Rate limiting — 429 returned after 10 failed login attempts | Module: Security | Type: Negative
+Test: Account lockout after 5 consecutive failed logins | Module: Auth | Type: Negative
+Test: Login performance under 100 concurrent users stays under 2s | Module: Performance | Type: Performance
+Test: JWT token expiry returns 401 after token TTL exceeded | Module: Auth | Type: Negative
+Test: Payment with valid card returns 200 and transaction ID | Module: Payments | Type: Positive
+Test: Payment with declined card returns 402 with error message | Module: Payments | Type: Negative
+Test: Payment with expired card returns 400 with validation error | Module: Payments | Type: Negative
+Test: Duplicate payment request within 30s returns 409 Conflict | Module: Payments | Type: Edge Case
+Test: Payment webhook HMAC signature validation rejects tampered payload | Module: Security | Type: Security
+Test: User registration with valid data returns 201 and user ID | Module: Auth | Type: Positive
+Test: Registration with existing email returns 409 Conflict | Module: Auth | Type: Negative
+Test: Registration with invalid email format returns 400 | Module: Auth | Type: Negative
+Test: Password reset token expires after 24 hours returns 410 | Module: Auth | Type: Negative
+Test: File upload with valid image returns 200 and file URL | Module: Upload | Type: Positive
+Test: File upload with executable file returns 415 Unsupported Media Type | Module: Security | Type: Security
+Test: File upload exceeding 10MB limit returns 413 Payload Too Large | Module: Upload | Type: Negative
+Test: Search with valid query returns paginated results | Module: Search | Type: Positive
+Test: Search with NoSQL injection payload returns 400 | Module: Security | Type: Security
+Test: Search page 2 does not return duplicates from page 1 | Module: Search | Type: Edge Case
+Test: Logout invalidates JWT and subsequent requests return 401 | Module: Auth | Type: Positive
+Test: Refresh token cannot be reused after rotation | Module: Security | Type: Security
+Test: Admin endpoint returns 403 for non-admin authenticated user | Module: Authorization | Type: Negative
+Test: 2FA OTP cannot be reused within same session | Module: Security | Type: Security
+Test: API error response does not expose stack trace on 500 | Module: Security | Type: Security

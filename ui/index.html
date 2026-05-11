@@ -1,0 +1,1974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Testrix — AI QA Platform</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: #f0f2f5;
+      color: #1f2937;
+      min-height: 100vh;
+    }
+
+    /* ── Navbar ── */
+    .navbar {
+      background: #0f172a;
+      color: #f8fafc;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.3px;
+      box-shadow: 0 2px 8px rgba(0,0,0,.3);
+    }
+    .navbar span { color: #38bdf8; }
+
+    /* ── Layout ── */
+    .container { padding: 24px; max-width: 1400px; margin: 0 auto; }
+
+    /* ── Input area ── */
+    .input-area {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      margin-bottom: 20px;
+    }
+    .input-area label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6b7280;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    textarea {
+      width: 100%;
+      height: 90px;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1.5px solid #e5e7eb;
+      font-size: 14px;
+      resize: vertical;
+      transition: border-color .2s;
+      font-family: inherit;
+    }
+    textarea:focus { outline: none; border-color: #3b82f6; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+
+    button {
+      padding: 9px 18px;
+      border: none;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity .15s, transform .1s;
+    }
+    button:hover { opacity: .88; }
+    button:active { transform: scale(.97); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+
+    .btn-primary   { background: #2563eb; color: #fff; }
+    .btn-success   { background: #10b981; color: #fff; }
+    .btn-orange    { background: #f59e0b; color: #fff; }
+    .btn-secondary { background: #6b7280; color: #fff; }
+
+    /* ── Status bar ── */
+    #status-bar {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 13px;
+      color: #1d4ed8;
+      margin-bottom: 16px;
+      display: none;
+      align-items: center;
+      gap: 8px;
+    }
+    #status-bar.error { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+    #status-bar.visible { display: flex; }
+
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid #93c5fd;
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      flex-shrink: 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── KPI cards ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .kpi-card {
+      background: #fff;
+      border-radius: 10px;
+      padding: 16px 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    }
+    .kpi-label { font-size: 12px; color: #9ca3af; font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
+    .kpi-value { font-size: 26px; font-weight: 700; color: #0f172a; }
+
+    /* ── Severity badge ── */
+    .badge {
+      display: inline-block;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    .badge.critical { background: #dc2626; }
+    .badge.high     { background: #ea580c; }
+    .badge.medium   { background: #2563eb; }
+    .badge.low      { background: #6b7280; }
+    .badge.positive { background: #10b981; }
+    .badge.negative { background: #ef4444; }
+    .badge.edge     { background: #8b5cf6; }
+    .badge.security { background: #dc2626; }
+    .badge.performance { background: #0891b2; }
+
+    /* ── Search ── */
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .search-row input {
+      padding: 8px 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 7px;
+      font-size: 14px;
+      width: 280px;
+      transition: border-color .2s;
+    }
+    .search-row input:focus { outline: none; border-color: #3b82f6; }
+
+    /* ── Two-column layout ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    @media (max-width: 900px) { .two-col { grid-template-columns: 1fr; } }
+
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+    }
+    .panel h3 { font-size: 15px; font-weight: 600; margin-bottom: 12px; color: #374151; }
+
+    /* ── JSON terminal ── */
+    pre {
+      background: #0f172a;
+      color: #86efac;
+      padding: 14px;
+      border-radius: 8px;
+      max-height: 360px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    /* ── Test case table ── */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    th, td { border: 1px solid #e5e7eb; padding: 9px 12px; text-align: left; }
+    thead th { background: #1e40af; color: #fff; font-weight: 600; white-space: nowrap; }
+    tbody tr:nth-child(even) { background: #f9fafb; }
+    tbody tr:hover { background: #eff6ff; }
+
+    .steps-btn {
+      background: none;
+      border: 1px solid #d1d5db;
+      color: #374151;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .steps-btn:hover { background: #f3f4f6; }
+
+    /* ── Steps modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.45);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 520px;
+      width: 90%;
+      box-shadow: 0 8px 40px rgba(0,0,0,.2);
+    }
+    .modal h4 { font-size: 15px; font-weight: 600; margin-bottom: 14px; }
+    .modal ol { padding-left: 18px; font-size: 13px; line-height: 2; color: #374151; }
+    .modal-close {
+      margin-top: 16px;
+      background: #e5e7eb;
+      color: #374151;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    /* ── History section ── */
+    .history-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      margin-top: 20px;
+    }
+    .history-section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .history-section-header h3 {
+      font-size: 15px;
+      font-weight: 600;
+      color: #374151;
+      margin: 0;
+    }
+    .history-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 12px;
+    }
+    .history-card {
+      border: 1px solid #e5e7eb;
+      border-radius: 9px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: border-color .15s, box-shadow .15s;
+      position: relative;
+    }
+    .history-card:hover { border-color: #3b82f6; box-shadow: 0 2px 10px rgba(59,130,246,.12); }
+    .history-card-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+    .history-time { font-size: 11px; color: #9ca3af; }
+    .history-component {
+      font-size: 11px;
+      background: #f3f4f6;
+      color: #6b7280;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+    .history-input {
+      font-size: 13px;
+      color: #1f2937;
+      font-weight: 500;
+      margin-bottom: 6px;
+      line-height: 1.4;
+    }
+    .history-summary {
+      font-size: 12px;
+      color: #6b7280;
+      line-height: 1.5;
+    }
+    .history-delete {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: #d1d5db;
+      font-size: 15px;
+      cursor: pointer;
+      padding: 2px 5px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+    .history-delete:hover { background: #fee2e2; color: #b91c1c; }
+    .history-empty {
+      text-align: center;
+      color: #9ca3af;
+      font-size: 14px;
+      padding: 24px 0;
+    }
+    .btn-history { background: #7c3aed; color: #fff; }
+    .btn-run     { background: #059669; color: #fff; }
+
+    /* ── Run tests results section ── */
+    .results-section {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      margin-top: 20px;
+    }
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .results-header h3 { font-size: 15px; font-weight: 600; color: #374151; margin: 0; }
+    .results-summary {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .summary-pill {
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .pill-total  { background: #64748b; }
+    .pill-pass   { background: #059669; }
+    .pill-fail   { background: #dc2626; }
+    .row-pass td { background: #f0fdf4 !important; }
+    .row-fail td { background: #fef2f2 !important; }
+    .result-status-pass { color: #059669; font-weight: 700; }
+    .result-status-fail { color: #dc2626; font-weight: 700; }
+
+    /* ── Tabs ── */
+    .tab-bar {
+      display: flex;
+      gap: 0;
+      background: #0f172a;
+      padding: 0 24px;
+      border-bottom: 2px solid #1e293b;
+    }
+    .tab-btn {
+      padding: 12px 22px;
+      border: none;
+      background: none;
+      color: #94a3b8;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -2px;
+      border-radius: 0;
+      transition: color .15s, border-color .15s;
+      transform: none;
+    }
+    .tab-btn:hover { color: #f8fafc; opacity: 1; }
+    .tab-btn.active { color: #38bdf8; border-bottom-color: #38bdf8; }
+
+    /* ── Visual QA form ── */
+    .vqa-form {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      margin-bottom: 20px;
+    }
+    .vqa-form h3 { font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 16px; }
+    .vqa-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    @media (max-width: 700px) { .vqa-grid { grid-template-columns: 1fr; } }
+    .vqa-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+    .vqa-field input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+    .vqa-field input:focus { outline: none; border-color: #3b82f6; }
+    .pages-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+    .page-chip {
+      display: flex; align-items: center; gap: 5px;
+      padding: 5px 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 20px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color .15s, background .15s;
+    }
+    .page-chip input[type=checkbox] { cursor: pointer; }
+    .page-chip:has(input:checked) { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+
+    /* ── Progress steps ── */
+    .progress-steps {
+      display: none;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 20px;
+    }
+    .progress-steps.visible { display: block; }
+    .progress-steps h4 { font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 12px; }
+    .step-list { display: flex; flex-direction: column; gap: 8px; }
+    .step-item {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: #94a3b8;
+    }
+    .step-item.done   { color: #059669; }
+    .step-item.active { color: #2563eb; font-weight: 600; }
+    .step-item.error  { color: #dc2626; }
+    .step-dot {
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #e5e7eb; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700;
+    }
+    .step-item.done   .step-dot { background: #059669; color: #fff; }
+    .step-item.active .step-dot { background: #2563eb; color: #fff; animation: pulse 1s ease-in-out infinite; }
+    .step-item.error  .step-dot { background: #dc2626; color: #fff; }
+    @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:.6;} }
+
+    /* ── VQA KPI bar ── */
+    .vqa-kpi-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .vqa-kpi {
+      flex: 1; min-width: 120px;
+      background: #fff;
+      border-radius: 10px;
+      padding: 14px 18px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      text-align: center;
+    }
+    .vqa-kpi .kpi-label { margin-bottom: 4px; }
+    .vqa-kpi .kpi-value { font-size: 22px; }
+
+    /* ── Comparison viewer ── */
+    .vqa-page-tabs {
+      display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px;
+    }
+    .vqa-page-tab {
+      padding: 5px 14px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+      border: 1.5px solid #e5e7eb;
+      background: #fff;
+      cursor: pointer;
+      transition: all .15s;
+    }
+    .vqa-page-tab.active { background: #0f172a; color: #fff; border-color: #0f172a; }
+    .vqa-page-tab.critical { border-color: #dc2626; color: #dc2626; }
+    .vqa-page-tab.critical.active { background: #dc2626; color: #fff; }
+    .vqa-page-tab.high { border-color: #ea580c; color: #ea580c; }
+    .vqa-page-tab.high.active { background: #ea580c; color: #fff; }
+    .vqa-page-tab.pass { border-color: #059669; color: #059669; }
+    .vqa-page-tab.pass.active { background: #059669; color: #fff; }
+
+    .viewer-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    @media (max-width: 1100px) { .viewer-grid { grid-template-columns: 1fr; } }
+    .viewer-panel {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.07);
+      overflow: hidden;
+    }
+    .viewer-panel-header {
+      padding: 10px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      border-bottom: 1px solid #f1f5f9;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .viewer-panel-header.figma  { background: #fdf4ff; color: #7c3aed; }
+    .viewer-panel-header.live   { background: #f0fdf4; color: #059669; }
+    .viewer-panel-header.diff   { background: #fff7ed; color: #c2410c; }
+    .viewer-img-wrap {
+      padding: 8px;
+      cursor: zoom-in;
+      background: #f8fafc;
+    }
+    .viewer-img-wrap img {
+      width: 100%;
+      border-radius: 6px;
+      display: block;
+      border: 1px solid #e5e7eb;
+    }
+    .zoom-btn {
+      background: none; border: none; cursor: pointer;
+      font-size: 16px; padding: 0; line-height: 1;
+      opacity: .6;
+    }
+    .zoom-btn:hover { opacity: 1; }
+
+    /* ── Lightbox ── */
+    .lightbox {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.85);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 92vw; max-height: 92vh; border-radius: 8px; }
+    .lightbox-close {
+      position: fixed; top: 16px; right: 20px;
+      color: #fff; font-size: 28px; cursor: pointer;
+      background: none; border: none; font-weight: 300; line-height: 1;
+    }
+
+    /* ── Issue list ── */
+    .issue-list-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px; flex-wrap: wrap; gap: 10px;
+    }
+    .issue-list-header h3 { font-size: 15px; font-weight: 600; color: #374151; margin: 0; }
+    .issue-card {
+      border: 1.5px solid #e5e7eb;
+      border-radius: 9px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      transition: border-color .15s, box-shadow .15s;
+      cursor: default;
+      position: relative;
+    }
+    .issue-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    .issue-card.critical { border-left: 4px solid #dc2626; }
+    .issue-card.high     { border-left: 4px solid #ea580c; }
+    .issue-card.medium   { border-left: 4px solid #2563eb; }
+    .issue-card.low      { border-left: 4px solid #6b7280; }
+    .issue-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+    .issue-element { font-size: 13px; font-weight: 600; color: #0f172a; }
+    .issue-desc { font-size: 13px; color: #374151; margin-bottom: 4px; line-height: 1.5; }
+    .issue-impact { font-size: 12px; color: #6b7280; }
+    .issue-region {
+      font-size: 11px; color: #94a3b8;
+      position: absolute; top: 12px; right: 14px;
+    }
+    .pass-banner {
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+      border-radius: 10px;
+      padding: 20px;
+      text-align: center;
+      color: #059669;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    /* ── AI Crawl tab ── */
+    .crawl-form {
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 6px rgba(0,0,0,.08);
+      margin-bottom: 20px;
+    }
+    .crawl-form h3 { font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 16px; }
+    .crawl-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; }
+    @media (max-width: 700px) { .crawl-grid { grid-template-columns: 1fr; } }
+    .crawl-field label {
+      display: block; font-size: 12px; font-weight: 600;
+      color: #6b7280; text-transform: uppercase;
+      letter-spacing: .5px; margin-bottom: 6px;
+    }
+    .crawl-field input {
+      width: 100%; padding: 10px 12px;
+      border: 1.5px solid #e5e7eb; border-radius: 8px;
+      font-size: 14px; font-family: inherit; transition: border-color .2s;
+    }
+    .crawl-field input:focus { outline: none; border-color: #3b82f6; }
+    .recommendation-banner {
+      border-radius: 10px; padding: 18px 24px;
+      font-size: 20px; font-weight: 700; text-align: center;
+      margin-bottom: 20px; letter-spacing: .5px;
+    }
+    .recommendation-banner.go  { background: #f0fdf4; color: #059669; border: 2px solid #bbf7d0; }
+    .recommendation-banner.nogo { background: #fef2f2; color: #dc2626; border: 2px solid #fecaca; }
+    .crawl-kpi-row {
+      display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px;
+    }
+    .crawl-kpi {
+      flex: 1; min-width: 110px;
+      background: #fff; border-radius: 10px;
+      padding: 14px 18px; box-shadow: 0 1px 6px rgba(0,0,0,.07); text-align: center;
+    }
+    .finding-page-section { margin-bottom: 20px; }
+    .finding-page-label {
+      font-size: 12px; font-weight: 700; color: #6b7280;
+      text-transform: uppercase; letter-spacing: .5px;
+      margin-bottom: 8px;
+    }
+    .ai-obs-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 10px; margin-top: 8px;
+    }
+    .ai-obs-card {
+      background: #f8fafc; border: 1px solid #e5e7eb;
+      border-radius: 8px; padding: 12px 14px; font-size: 12px;
+    }
+    .ai-obs-card-title { font-weight: 600; color: #374151; margin-bottom: 4px; font-size: 13px; }
+    .ai-obs-tag {
+      display: inline-block; padding: 2px 8px; border-radius: 4px;
+      font-size: 11px; font-weight: 600; margin-right: 4px; margin-bottom: 4px;
+    }
+    .tag-error   { background: #fee2e2; color: #b91c1c; }
+    .tag-warn    { background: #fef9c3; color: #92400e; }
+    .tag-ok      { background: #f0fdf4; color: #059669; }
+    .crawl-section-title {
+      font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 14px;
+    }
+
+    /* ── Run tests modal ── */
+    .run-modal-field { margin-bottom: 14px; }
+    .run-modal-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #6b7280;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: 6px;
+    }
+    .run-modal-field input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #e5e7eb;
+      border-radius: 7px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .run-modal-field input:focus { outline: none; border-color: #059669; }
+    .run-modal-actions { display: flex; gap: 10px; margin-top: 4px; }
+  </style>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<div class="navbar">
+  ⚡ <span>Testrix</span> — Smarter Testing. Faster Releases.
+</div>
+
+<!-- Tab bar -->
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('qa')">🧪 QA Analysis</button>
+  <button class="tab-btn" onclick="switchTab('visual')">👁 Visual QA</button>
+  <button class="tab-btn" onclick="switchTab('crawl')">🕷 AI Crawl</button>
+</div>
+
+<!-- ═══ TAB: QA Analysis ═══ -->
+<div id="tab-qa" class="container">
+
+  <!-- Input -->
+  <div class="input-area">
+    <label>Describe a bug or feature to analyze</label>
+    <textarea id="input" placeholder="e.g. Login API returns 500 when password contains special characters"></textarea>
+    <div class="btn-row">
+      <button class="btn-primary" id="analyzeBtn" onclick="runQA()">▶ Analyze</button>
+      <button class="btn-run" id="runTestsBtn" onclick="openRunModal()" disabled>▶▶ Run Tests</button>
+      <button class="btn-success" onclick="downloadCSV()">⬇ Export CSV</button>
+      <button class="btn-orange" onclick="downloadPostman()">📬 Export Postman</button>
+      <button class="btn-secondary" onclick="clearAll()">✕ Clear</button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div id="status-bar">
+    <div class="spinner" id="spinner"></div>
+    <span id="status-msg">Analyzing in parallel…</span>
+  </div>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Severity</div>
+      <div class="kpi-value" id="kpi-severity">—</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Test Cases</div>
+      <div class="kpi-value" id="kpi-count">0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Security Checks</div>
+      <div class="kpi-value" id="kpi-security">0</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Regression Areas</div>
+      <div class="kpi-value" id="kpi-regression">0</div>
+    </div>
+  </div>
+
+  <!-- Search + filter -->
+  <div class="search-row">
+    <input type="text" id="search" placeholder="🔍 Search test cases…" oninput="filterTable()" />
+    <select id="type-filter" onchange="filterTable()" style="padding:8px 12px;border:1.5px solid #e5e7eb;border-radius:7px;font-size:14px;">
+      <option value="">All types</option>
+      <option value="positive">Positive</option>
+      <option value="negative">Negative</option>
+      <option value="edge">Edge</option>
+      <option value="security">Security</option>
+      <option value="performance">Performance</option>
+    </select>
+  </div>
+
+  <!-- Two-column: Bug Analysis + Test Cases -->
+  <div class="two-col">
+
+    <div class="panel">
+      <h3>🐛 Bug Analysis</h3>
+      <pre id="bug-output">No data yet — run an analysis above.</pre>
+    </div>
+
+    <div class="panel">
+      <h3>🧪 Test Cases</h3>
+      <div class="table-wrap">
+        <table id="tc-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Type</th>
+              <th>Priority</th>
+              <th>Expected Status</th>
+              <th>Steps</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td colspan="6" style="text-align:center;color:#9ca3af;">No data yet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Test Execution Results -->
+  <div class="results-section" id="results-section" style="display:none;">
+    <div class="results-header">
+      <h3>▶▶ Playwright Execution Results</h3>
+      <div class="results-summary" id="results-summary"></div>
+    </div>
+    <div class="table-wrap">
+      <table id="results-table">
+        <thead>
+          <tr>
+            <th>ID</th><th>Title</th><th>API</th>
+            <th>Expected</th><th>Actual</th><th>Result</th><th>Time (ms)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- History Section -->
+  <div class="history-section">
+    <div class="history-section-header">
+      <h3>📋 Analysis History</h3>
+      <button class="btn-history" onclick="loadHistory()">↻ Load History</button>
+    </div>
+    <div id="history-container">
+      <p class="history-empty">Click "Load History" to view your past analyses.</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Run Tests modal -->
+<div class="modal-overlay" id="run-modal" onclick="closeRunModal(event)">
+  <div class="modal" style="max-width:460px;">
+    <h4>▶▶ Execute Test Cases with Playwright</h4>
+    <div class="run-modal-field">
+      <label>Target Base URL</label>
+      <input id="base-url" type="text" value="http://localhost:3000"
+        placeholder="http://localhost:3000" />
+    </div>
+    <div class="run-modal-field">
+      <label>Auth Token (optional)</label>
+      <input id="auth-token" type="text" placeholder="eyJhbGci…" />
+    </div>
+    <div class="run-modal-field">
+      <label>Timeout per request (ms)</label>
+      <input id="run-timeout" type="number" value="5000" min="1000" max="30000" />
+    </div>
+    <div class="run-modal-actions">
+      <button class="btn-run" onclick="executeTests()">▶▶ Run</button>
+      <button class="modal-close" onclick="closeRunModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+</div><!-- /tab-qa -->
+
+<!-- ═══ TAB: Visual QA ═══ -->
+<div id="tab-visual" class="container" style="display:none;">
+
+  <!-- Input form -->
+  <div class="vqa-form">
+    <h3>👁 Visual QA — Compare Figma Design to Live Shopify Store</h3>
+    <div class="vqa-grid">
+      <div class="vqa-field">
+        <label>Shopify Store URL</label>
+        <input id="vqa-shopify" type="text" placeholder="https://mystore.myshopify.com" />
+      </div>
+      <div class="vqa-field">
+        <label>Figma File / Frame URL</label>
+        <input id="vqa-figma" type="text" placeholder="https://www.figma.com/design/…" />
+      </div>
+      <div class="vqa-field">
+        <label>Store Password (optional)</label>
+        <input id="vqa-password" type="text" placeholder="Leave blank if store is public" />
+      </div>
+      <div class="vqa-field">
+        <label>Pages to Test</label>
+        <div class="pages-row">
+          <label class="page-chip"><input type="checkbox" value="home" checked> Home</label>
+          <label class="page-chip"><input type="checkbox" value="product" checked> Product</label>
+          <label class="page-chip"><input type="checkbox" value="collection" checked> Collection</label>
+          <label class="page-chip"><input type="checkbox" value="cart" checked> Cart</label>
+        </div>
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn-primary" id="vqa-start-btn" onclick="startVisualQA()">▶ Start Visual QA</button>
+      <button class="btn-secondary" onclick="clearVisualQA()">✕ Clear</button>
+      <button class="btn-success" id="vqa-export-btn" onclick="exportVQAReport()" style="display:none;">⬇ Export JSON Report</button>
+    </div>
+  </div>
+
+  <!-- Progress steps -->
+  <div class="progress-steps" id="vqa-progress">
+    <h4>Running Visual QA…</h4>
+    <div class="step-list">
+      <div class="step-item" id="vqa-step-fetch">
+        <div class="step-dot">1</div> Fetching Figma frames &amp; Shopify screenshots
+      </div>
+      <div class="step-item" id="vqa-step-compare">
+        <div class="step-dot">2</div> Running pixel diff comparison
+      </div>
+      <div class="step-item" id="vqa-step-ai">
+        <div class="step-dot">3</div> AI analysis with Claude vision
+      </div>
+      <div class="step-item" id="vqa-step-report">
+        <div class="step-dot">4</div> Building bug report
+      </div>
+    </div>
+  </div>
+
+  <!-- VQA error bar -->
+  <div id="vqa-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;color:#b91c1c;font-size:13px;margin-bottom:16px;"></div>
+
+  <!-- Results area (hidden until job complete) -->
+  <div id="vqa-results" style="display:none;">
+
+    <!-- KPI row -->
+    <div class="vqa-kpi-row">
+      <div class="vqa-kpi">
+        <div class="kpi-label">Overall</div>
+        <div class="kpi-value" id="vqa-kpi-overall">—</div>
+      </div>
+      <div class="vqa-kpi">
+        <div class="kpi-label">Critical</div>
+        <div class="kpi-value" id="vqa-kpi-critical" style="color:#dc2626;">0</div>
+      </div>
+      <div class="vqa-kpi">
+        <div class="kpi-label">High</div>
+        <div class="kpi-value" id="vqa-kpi-high" style="color:#ea580c;">0</div>
+      </div>
+      <div class="vqa-kpi">
+        <div class="kpi-label">Medium</div>
+        <div class="kpi-value" id="vqa-kpi-medium" style="color:#2563eb;">0</div>
+      </div>
+      <div class="vqa-kpi">
+        <div class="kpi-label">Low</div>
+        <div class="kpi-value" id="vqa-kpi-low" style="color:#6b7280;">0</div>
+      </div>
+      <div class="vqa-kpi">
+        <div class="kpi-label">Pages Tested</div>
+        <div class="kpi-value" id="vqa-kpi-pages">0</div>
+      </div>
+    </div>
+
+    <!-- Page tabs -->
+    <div class="vqa-page-tabs" id="vqa-page-tabs"></div>
+
+    <!-- Side-by-side viewer -->
+    <div class="viewer-grid" id="vqa-viewer">
+      <div class="viewer-panel">
+        <div class="viewer-panel-header figma">
+          <span>Figma Design</span>
+          <button class="zoom-btn" onclick="openLightbox('vqa-img-figma')" title="Zoom">&#x2922;</button>
+        </div>
+        <div class="viewer-img-wrap" onclick="openLightbox('vqa-img-figma')">
+          <img id="vqa-img-figma" src="" alt="Figma frame" />
+        </div>
+      </div>
+      <div class="viewer-panel">
+        <div class="viewer-panel-header live">
+          <span>Live Shopify</span>
+          <button class="zoom-btn" onclick="openLightbox('vqa-img-live')" title="Zoom">&#x2922;</button>
+        </div>
+        <div class="viewer-img-wrap" onclick="openLightbox('vqa-img-live')">
+          <img id="vqa-img-live" src="" alt="Live screenshot" />
+        </div>
+      </div>
+      <div class="viewer-panel">
+        <div class="viewer-panel-header diff">
+          <span id="vqa-diff-label">Diff</span>
+          <button class="zoom-btn" onclick="openLightbox('vqa-img-diff')" title="Zoom">&#x2922;</button>
+        </div>
+        <div class="viewer-img-wrap" onclick="openLightbox('vqa-img-diff')">
+          <img id="vqa-img-diff" src="" alt="Diff image" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Issue list -->
+    <div class="panel">
+      <div class="issue-list-header">
+        <h3>Issues Found</h3>
+        <span id="vqa-issue-count" style="font-size:13px;color:#6b7280;"></span>
+      </div>
+      <div id="vqa-issue-list"></div>
+    </div>
+
+  </div>
+</div><!-- /tab-visual -->
+
+<!-- ═══ TAB: AI Crawl ═══ -->
+<div id="tab-crawl" class="container" style="display:none;">
+
+  <!-- Input form -->
+  <div class="crawl-form">
+    <h3>🕷 AI Website Crawling Engine — Discover, Inspect &amp; QA Any Site</h3>
+    <div class="crawl-grid">
+      <div class="crawl-field">
+        <label>Seed URL</label>
+        <input id="crawl-url" type="text" placeholder="https://example.com" />
+      </div>
+      <div class="crawl-field">
+        <label>Max Pages</label>
+        <input id="crawl-max-pages" type="number" value="20" min="1" max="100" />
+      </div>
+      <div class="crawl-field">
+        <label>Max Depth</label>
+        <input id="crawl-max-depth" type="number" value="2" min="0" max="4" />
+      </div>
+    </div>
+    <div class="btn-row" style="margin-top:16px;">
+      <button class="btn-primary" id="crawl-start-btn" onclick="startAICrawl()">▶ Start AI Crawl</button>
+      <button class="btn-secondary" onclick="clearAICrawl()">✕ Clear</button>
+      <button class="btn-success" id="crawl-export-btn" onclick="exportCrawlReport()" style="display:none;">⬇ Export JSON Report</button>
+    </div>
+  </div>
+
+  <!-- Progress steps -->
+  <div class="progress-steps" id="crawl-progress">
+    <h4>Running AI Crawl…</h4>
+    <div class="step-list">
+      <div class="step-item" id="crawl-step-discover">
+        <div class="step-dot">1</div> Discovering pages via sitemap + link crawl
+      </div>
+      <div class="step-item" id="crawl-step-inspect">
+        <div class="step-dot">2</div> Browser inspection (desktop / tablet / mobile)
+      </div>
+      <div class="step-item" id="crawl-step-qa">
+        <div class="step-dot">3</div> QA evaluation &amp; accessibility audit
+      </div>
+      <div class="step-item" id="crawl-step-ai">
+        <div class="step-dot">4</div> AI review &amp; GO / NO-GO recommendation
+      </div>
+    </div>
+  </div>
+
+  <!-- Error bar -->
+  <div id="crawl-error" style="display:none;background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px 16px;color:#b91c1c;font-size:13px;margin-bottom:16px;"></div>
+
+  <!-- Results (hidden until complete) -->
+  <div id="crawl-results" style="display:none;">
+
+    <!-- Recommendation banner -->
+    <div class="recommendation-banner" id="crawl-recommendation"></div>
+
+    <!-- KPI row -->
+    <div class="crawl-kpi-row">
+      <div class="crawl-kpi">
+        <div class="kpi-label">Pages Found</div>
+        <div class="kpi-value" id="crawl-kpi-found">0</div>
+      </div>
+      <div class="crawl-kpi">
+        <div class="kpi-label">Inspected</div>
+        <div class="kpi-value" id="crawl-kpi-inspected">0</div>
+      </div>
+      <div class="crawl-kpi">
+        <div class="kpi-label">Critical</div>
+        <div class="kpi-value" id="crawl-kpi-critical" style="color:#dc2626;">0</div>
+      </div>
+      <div class="crawl-kpi">
+        <div class="kpi-label">High</div>
+        <div class="kpi-value" id="crawl-kpi-high" style="color:#ea580c;">0</div>
+      </div>
+      <div class="crawl-kpi">
+        <div class="kpi-label">Medium</div>
+        <div class="kpi-value" id="crawl-kpi-medium" style="color:#2563eb;">0</div>
+      </div>
+      <div class="crawl-kpi">
+        <div class="kpi-label">Low</div>
+        <div class="kpi-value" id="crawl-kpi-low" style="color:#6b7280;">0</div>
+      </div>
+      <div class="crawl-kpi">
+        <div class="kpi-label">A11y Blockers</div>
+        <div class="kpi-value" id="crawl-kpi-a11y" style="color:#7c3aed;">0</div>
+      </div>
+    </div>
+
+    <!-- AI observations / bug summary -->
+    <div class="panel" style="margin-bottom:20px;" id="crawl-ai-panel">
+      <div class="crawl-section-title">AI Review</div>
+      <div id="crawl-ai-observations"></div>
+    </div>
+
+    <!-- Findings list -->
+    <div class="panel" style="margin-bottom:20px;">
+      <div class="issue-list-header">
+        <div class="crawl-section-title">Findings</div>
+        <span id="crawl-finding-count" style="font-size:13px;color:#6b7280;"></span>
+      </div>
+      <div id="crawl-findings-list"></div>
+    </div>
+
+    <!-- Observations per page -->
+    <div class="panel">
+      <div class="crawl-section-title">Page Observations</div>
+      <div id="crawl-observations"></div>
+    </div>
+
+  </div>
+</div><!-- /tab-crawl -->
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <button class="lightbox-close" onclick="closeLightbox()">&#x2715;</button>
+  <img id="lightbox-img" src="" alt="Zoomed view" onclick="event.stopPropagation()" />
+</div>
+
+<!-- Steps modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <h4 id="modal-title">Test Steps</h4>
+    <ol id="modal-steps"></ol>
+    <button class="modal-close" onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<script>
+let globalTests = [];
+let globalBugAnalysis = null;
+
+/* ── Status bar helpers ── */
+function showStatus(msg, isError = false) {
+  const bar = document.getElementById("status-bar");
+  const spinner = document.getElementById("spinner");
+  bar.className = "visible" + (isError ? " error" : "");
+  document.getElementById("status-msg").textContent = msg;
+  spinner.style.display = isError ? "none" : "block";
+}
+function hideStatus() {
+  document.getElementById("status-bar").className = "";
+}
+
+/* ── Main analysis using SSE stream ── */
+async function runQA() {
+  const input = document.getElementById("input").value.trim();
+  if (!input) { alert("Please enter a bug or feature description."); return; }
+
+  const btn = document.getElementById("analyzeBtn");
+  btn.disabled = true;
+  showStatus("Analyzing in parallel…");
+  document.getElementById("bug-output").textContent = "Loading…";
+  document.querySelector("#tc-table tbody").innerHTML =
+    "<tr><td colspan='6' style='text-align:center;color:#9ca3af;'>Loading…</td></tr>";
+
+  try {
+    const res = await fetch("/qa-ai/stream", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ input_text: input })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop();
+
+      for (const chunk of lines) {
+        const line = chunk.replace(/^data:\s*/, "").trim();
+        if (!line) continue;
+        try {
+          const evt = JSON.parse(line);
+          if (evt.status === "analyzing") {
+            showStatus(evt.message || "Analyzing…");
+          } else if (evt.status === "complete") {
+            renderResult(evt.result);
+            hideStatus();
+          } else if (evt.status === "error") {
+            throw new Error(evt.message || "Unknown error from server");
+          }
+        } catch (parseErr) {
+          if (parseErr.message.includes("Unknown error")) throw parseErr;
+        }
+      }
+    }
+
+  } catch (e) {
+    showStatus("Error: " + e.message, true);
+    document.getElementById("bug-output").textContent = "Error: " + e.message;
+    document.querySelector("#tc-table tbody").innerHTML =
+      `<tr><td colspan='6' style='color:#b91c1c;'>${e.message}</td></tr>`;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function renderResult(result) {
+  globalBugAnalysis = result.bug_analysis;
+  globalTests = Array.isArray(result.test_cases) ? result.test_cases : [];
+
+  // Bug analysis JSON
+  document.getElementById("bug-output").textContent =
+    JSON.stringify(result.bug_analysis, null, 2);
+
+  // KPIs
+  const severity = result.bug_analysis?.bug?.severity || "—";
+  document.getElementById("kpi-severity").innerHTML =
+    `<span class="badge ${severity.toLowerCase()}">${severity}</span>`;
+  document.getElementById("kpi-count").textContent = globalTests.length;
+  document.getElementById("kpi-security").textContent =
+    result.bug_analysis?.securityPayloads?.length || 0;
+  document.getElementById("kpi-regression").textContent =
+    result.bug_analysis?.regression_areas?.length || 0;
+
+  renderTable(globalTests);
+  document.getElementById("runTestsBtn").disabled = globalTests.length === 0;
+}
+
+/* ── Table rendering ── */
+function renderTable(tests) {
+  const tbody = document.querySelector("#tc-table tbody");
+  if (!tests.length) {
+    tbody.innerHTML = "<tr><td colspan='6' style='text-align:center;color:#9ca3af;'>No test cases</td></tr>";
+    return;
+  }
+  tbody.innerHTML = tests.map((tc, i) => {
+    const expected =
+      tc.expected?.status ?? tc.expectedResponse?.statusCode ?? "—";
+    const type = tc.type || "";
+    const typeLower = type.toLowerCase().replace(/\s+/g, "");
+    const steps = Array.isArray(tc.steps) ? tc.steps : [];
+    return `
+      <tr>
+        <td>${tc.id || ""}</td>
+        <td>${escHtml(tc.title || tc.description || "")}</td>
+        <td>${type ? `<span class="badge ${typeLower}">${type}</span>` : "—"}</td>
+        <td>${tc.priority || "—"}</td>
+        <td>${expected}</td>
+        <td>${steps.length
+          ? `<button class="steps-btn" onclick="openModal(${i})">View ${steps.length}</button>`
+          : "—"}</td>
+      </tr>`;
+  }).join("");
+}
+
+/* ── Filter ── */
+function filterTable() {
+  const kw = document.getElementById("search").value.toLowerCase();
+  const tf = document.getElementById("type-filter").value.toLowerCase();
+  const filtered = globalTests.filter(tc => {
+    const title = (tc.title || tc.description || "").toLowerCase();
+    const type  = (tc.type || "").toLowerCase().replace(/\s+/g, "");
+    return title.includes(kw) && (tf === "" || type.includes(tf));
+  });
+  renderTable(filtered);
+}
+
+/* ── Steps modal ── */
+function openModal(idx) {
+  const tc = globalTests[idx];
+  document.getElementById("modal-title").textContent = tc.title || tc.description || "Steps";
+  document.getElementById("modal-steps").innerHTML =
+    (tc.steps || []).map(s => `<li>${escHtml(s)}</li>`).join("");
+  document.getElementById("modal-overlay").classList.add("open");
+}
+function closeModal(e) {
+  if (!e || e.target.id === "modal-overlay" || e.target.classList.contains("modal-close")) {
+    document.getElementById("modal-overlay").classList.remove("open");
+  }
+}
+
+/* ── CSV export ── */
+function downloadCSV() {
+  if (!globalTests.length) { alert("No test cases to export."); return; }
+  const header = ["ID", "Title", "Type", "Priority", "Expected Status", "Steps"];
+  const rows = globalTests.map(tc => [
+    tc.id || "",
+    `"${(tc.title || "").replace(/"/g, '""')}"`,
+    tc.type || "",
+    tc.priority || "",
+    tc.expected?.status ?? tc.expectedResponse?.statusCode ?? "",
+    `"${(tc.steps || []).join(" | ").replace(/"/g, '""')}"`
+  ]);
+  const csv = [header, ...rows].map(r => r.join(",")).join("\n");
+  triggerDownload(csv, "testrix_test_cases.csv", "text/csv");
+}
+
+/* ── Postman Collection v2.1 export ── */
+function downloadPostman() {
+  if (!globalTests.length) { alert("No test cases to export."); return; }
+
+  const inputText = document.getElementById("input").value.trim();
+  const items = globalTests.map(tc => {
+    const stepText = (tc.steps || [])[0] || "";
+    const methodMatch = stepText.match(/\b(GET|POST|PUT|PATCH|DELETE)\b/i);
+    const pathMatch   = stepText.match(/\/([\w/{}]+)/);
+    const method = methodMatch ? methodMatch[1].toUpperCase() : "POST";
+    const path   = pathMatch   ? pathMatch[0] : "/api/endpoint";
+
+    return {
+      name: `${tc.id || "TC"} — ${tc.title || tc.description || ""}`,
+      request: {
+        method,
+        header: [{ key: "Content-Type", value: "application/json" }],
+        url: {
+          raw: `{{base_url}}${path}`,
+          host: ["{{base_url}}"],
+          path: path.replace(/^\//, "").split("/")
+        },
+        body: { mode: "raw", raw: "{}" }
+      },
+      response: []
+    };
+  });
+
+  const collection = {
+    info: {
+      name: `Testrix — ${inputText.slice(0, 60)}`,
+      schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    item: items,
+    variable: [{ key: "base_url", value: "http://localhost:3000" }]
+  };
+
+  triggerDownload(
+    JSON.stringify(collection, null, 2),
+    "testrix_collection.postman_collection.json",
+    "application/json"
+  );
+}
+
+/* ── Clear ── */
+function clearAll() {
+  document.getElementById("input").value = "";
+  document.getElementById("bug-output").textContent = "No data yet — run an analysis above.";
+  document.querySelector("#tc-table tbody").innerHTML =
+    "<tr><td colspan='6' style='text-align:center;color:#9ca3af;'>No data yet</td></tr>";
+  document.getElementById("kpi-severity").innerHTML = "—";
+  document.getElementById("kpi-count").textContent = "0";
+  document.getElementById("kpi-security").textContent = "0";
+  document.getElementById("kpi-regression").textContent = "0";
+  globalTests = [];
+  globalBugAnalysis = null;
+  hideStatus();
+  document.getElementById("runTestsBtn").disabled = true;
+  document.getElementById("results-section").style.display = "none";
+}
+
+/* ── Helpers ── */
+function triggerDownload(content, filename, mime) {
+  const blob = new Blob([content], { type: mime });
+  const url  = URL.createObjectURL(blob);
+  const a    = document.createElement("a");
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+/* ── Playwright test runner ── */
+function openRunModal() {
+  document.getElementById("run-modal").classList.add("open");
+}
+function closeRunModal(e) {
+  if (!e || e.target.id === "run-modal" || e.target.classList.contains("modal-close")) {
+    document.getElementById("run-modal").classList.remove("open");
+  }
+}
+
+async function executeTests() {
+  if (!globalTests.length) { alert("No test cases to run."); return; }
+
+  const baseUrl    = document.getElementById("base-url").value.trim();
+  const authToken  = document.getElementById("auth-token").value.trim() || null;
+  const timeoutMs  = parseInt(document.getElementById("run-timeout").value) || 5000;
+
+  if (!baseUrl) { alert("Please enter a base URL."); return; }
+
+  closeRunModal();
+  showStatus(`Running ${globalTests.length} tests against ${baseUrl}…`);
+
+  const section = document.getElementById("results-section");
+  const summary = document.getElementById("results-summary");
+  const tbody   = document.querySelector("#results-table tbody");
+
+  section.style.display = "block";
+  summary.innerHTML = "";
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;color:#9ca3af;">Running…</td></tr>`;
+  section.scrollIntoView({ behavior: "smooth" });
+
+  try {
+    const res = await fetch("/run-tests", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ base_url: baseUrl, test_cases: globalTests, timeout_ms: timeoutMs, auth_token: authToken })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: res.statusText }));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    renderRunResults(data);
+    hideStatus();
+
+  } catch (e) {
+    showStatus("Run failed: " + e.message, true);
+    tbody.innerHTML = `<tr><td colspan="7" style="color:#b91c1c;padding:12px;">${escHtml(e.message)}</td></tr>`;
+  }
+}
+
+function renderRunResults(data) {
+  const { summary, results } = data;
+
+  document.getElementById("results-summary").innerHTML = `
+    <span class="summary-pill pill-total">Total: ${summary.total}</span>
+    <span class="summary-pill pill-pass">Passed: ${summary.passed}</span>
+    <span class="summary-pill pill-fail">Failed: ${summary.failed}</span>`;
+
+  document.querySelector("#results-table tbody").innerHTML = results.map(r => {
+    const rowClass  = r.passed ? "row-pass" : "row-fail";
+    const statusTxt = r.passed
+      ? `<span class="result-status-pass">✓ PASS</span>`
+      : `<span class="result-status-fail">✗ FAIL</span>`;
+    const errTip = r.error ? ` title="${escHtml(r.error)}"` : "";
+    return `<tr class="${rowClass}"${errTip}>
+      <td>${escHtml(String(r.id))}</td>
+      <td>${escHtml(r.title)}</td>
+      <td><code style="font-size:11px;">${escHtml(r.api)}</code></td>
+      <td>${r.expected_status ?? "—"}</td>
+      <td>${r.actual_status  ?? (r.error ? "ERR" : "—")}</td>
+      <td>${statusTxt}</td>
+      <td>${r.response_time_ms}</td>
+    </tr>`;
+  }).join("");
+}
+
+/* ── History ── */
+async function loadHistory() {
+  const container = document.getElementById("history-container");
+  container.innerHTML = '<p class="history-empty">Loading…</p>';
+  try {
+    const res = await fetch("/history?limit=10");
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.error || `Server error (HTTP ${res.status}) — is MongoDB running?`);
+    }
+    const data = await res.json();
+
+    if (!data.records || !data.records.length) {
+      container.innerHTML = '<p class="history-empty">No history yet — run an analysis first.</p>';
+      return;
+    }
+
+    container.innerHTML = `<div class="history-grid">${data.records.map(r => {
+      const bug    = r.bug_analysis?.bug || {};
+      const sev    = bug.severity || "";
+      const comp   = bug.affected_component || "";
+      const ts     = r.timestamp ? new Date(r.timestamp).toLocaleString() : "";
+      const input  = escHtml((r.input_text || "").slice(0, 80) + ((r.input_text || "").length > 80 ? "…" : ""));
+      const desc   = escHtml((bug.description || "").slice(0, 100) + ((bug.description || "").length > 100 ? "…" : ""));
+      const sevBadge = sev ? `<span class="badge ${sev.toLowerCase()}">${sev}</span>` : "";
+      const compBadge = comp ? `<span class="history-component">${escHtml(comp)}</span>` : "";
+      return `
+        <div class="history-card" onclick="loadHistoryItem('${r._id}')">
+          <button class="history-delete" title="Delete" onclick="deleteHistoryItem('${r._id}', event)">✕</button>
+          <div class="history-card-meta">
+            <span class="history-time">${ts}</span>
+            ${sevBadge}
+            ${compBadge}
+          </div>
+          <div class="history-input">${input}</div>
+          ${desc ? `<div class="history-summary">${desc}</div>` : ""}
+        </div>`;
+    }).join("")}</div>`;
+
+  } catch (e) {
+    container.innerHTML = `<p class="history-empty" style="color:#b91c1c;">Error: ${escHtml(e.message)}</p>`;
+  }
+}
+
+async function loadHistoryItem(id) {
+  try {
+    showStatus("Loading from history…");
+    const res = await fetch(`/history/${id}`);
+    if (!res.ok) throw new Error("Record not found");
+    const record = await res.json();
+    document.getElementById("input").value = record.input_text || "";
+    renderResult({
+      input: record.input_text,
+      bug_analysis: record.bug_analysis,
+      test_cases: record.test_cases || [],
+    });
+    hideStatus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  } catch (e) {
+    showStatus("Failed to load: " + e.message, true);
+  }
+}
+
+async function deleteHistoryItem(id, event) {
+  event.stopPropagation();
+  try {
+    const res = await fetch(`/history/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    await loadHistory();
+  } catch (e) {
+    alert("Delete failed: " + e.message);
+  }
+}
+
+/* ══════════════════════════════════════════
+   TAB SWITCHING
+══════════════════════════════════════════ */
+function switchTab(name) {
+  ["qa", "visual", "crawl"].forEach(t => {
+    const el = document.getElementById("tab-" + t);
+    if (el) el.style.display = t === name ? "" : "none";
+  });
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    const active = btn.getAttribute("onclick")?.includes(`'${name}'`);
+    btn.classList.toggle("active", !!active);
+  });
+}
+
+/* ══════════════════════════════════════════
+   VISUAL QA
+══════════════════════════════════════════ */
+let vqaReport = null;
+let vqaJobId  = null;
+let vqaPollTimer = null;
+let vqaCurrentPage = 0;
+
+const VQA_STEPS = {
+  fetch:   "vqa-step-fetch",
+  compare: "vqa-step-compare",
+  ai:      "vqa-step-ai",
+  report:  "vqa-step-report",
+};
+
+function vqaSetStep(active) {
+  const order = ["fetch", "compare", "ai", "report"];
+  const idx   = order.indexOf(active);
+  order.forEach((key, i) => {
+    const el = document.getElementById(VQA_STEPS[key]);
+    el.className = "step-item" + (i < idx ? " done" : i === idx ? " active" : "");
+    el.querySelector(".step-dot").textContent = i < idx ? "✓" : String(i + 1);
+  });
+}
+
+function vqaSetAllDone() {
+  Object.values(VQA_STEPS).forEach(id => {
+    const el = document.getElementById(id);
+    el.className = "step-item done";
+    el.querySelector(".step-dot").textContent = "✓";
+  });
+}
+
+function vqaProgressFromMessage(msg) {
+  if (!msg) return;
+  const m = msg.toLowerCase();
+  if (m.includes("figma") || m.includes("shopify") || m.includes("screenshot")) vqaSetStep("fetch");
+  else if (m.includes("compar") || m.includes("diff"))                           vqaSetStep("compare");
+  else if (m.includes("ai") || m.includes("analys") || m.includes("claude"))     vqaSetStep("ai");
+  else if (m.includes("report") || m.includes("build"))                          vqaSetStep("report");
+}
+
+async function startVisualQA() {
+  const shopifyUrl = document.getElementById("vqa-shopify").value.trim();
+  const figmaUrl   = document.getElementById("vqa-figma").value.trim();
+  const password   = document.getElementById("vqa-password").value.trim() || null;
+  const pages      = [...document.querySelectorAll(".pages-row input:checked")].map(el => el.value);
+
+  if (!shopifyUrl) { alert("Please enter the Shopify store URL."); return; }
+  if (!figmaUrl)   { alert("Please enter the Figma file URL."); return; }
+  if (!pages.length) { alert("Select at least one page to test."); return; }
+
+  // Reset UI
+  document.getElementById("vqa-error").style.display = "none";
+  document.getElementById("vqa-results").style.display = "none";
+  document.getElementById("vqa-export-btn").style.display = "none";
+  document.getElementById("vqa-progress").className = "progress-steps visible";
+  document.getElementById("vqa-start-btn").disabled = true;
+  vqaSetStep("fetch");
+  vqaReport = null;
+
+  try {
+    const res = await fetch("/visual-qa", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ shopify_url: shopifyUrl, figma_url: figmaUrl, pages, shopify_password: password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    vqaJobId = data.job_id;
+    pollVQAJob();
+  } catch (e) {
+    vqaShowError(e.message);
+  }
+}
+
+function pollVQAJob() {
+  if (vqaPollTimer) clearInterval(vqaPollTimer);
+  vqaPollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`/visual-qa/${vqaJobId}`);
+      if (!res.ok) return;
+      const job = await res.json();
+
+      vqaProgressFromMessage(job.progress);
+
+      if (job.status === "complete") {
+        clearInterval(vqaPollTimer);
+        vqaSetAllDone();
+        vqaReport = job.result;
+        setTimeout(() => {
+          document.getElementById("vqa-progress").className = "progress-steps";
+          document.getElementById("vqa-start-btn").disabled = false;
+          renderVQAReport(job.result);
+        }, 600);
+      } else if (job.status === "failed") {
+        clearInterval(vqaPollTimer);
+        document.getElementById("vqa-progress").className = "progress-steps";
+        document.getElementById("vqa-start-btn").disabled = false;
+        vqaShowError(job.error || "Job failed — check server logs for details.");
+      }
+    } catch (_) {}
+  }, 2000);
+}
+
+function renderVQAReport(report) {
+  if (!report) return;
+
+  // KPIs
+  const sc = report.severity_counts || {};
+  document.getElementById("vqa-kpi-overall").innerHTML  =
+    `<span class="badge ${(report.overall_severity||'').toLowerCase()}">${report.overall_severity || '—'}</span>`;
+  document.getElementById("vqa-kpi-critical").textContent = sc.Critical || 0;
+  document.getElementById("vqa-kpi-high").textContent     = sc.High     || 0;
+  document.getElementById("vqa-kpi-medium").textContent   = sc.Medium   || 0;
+  document.getElementById("vqa-kpi-low").textContent      = sc.Low      || 0;
+  document.getElementById("vqa-kpi-pages").textContent    = report.pages_tested || 0;
+
+  // Page tabs
+  const pages = report.page_reports || [];
+  document.getElementById("vqa-page-tabs").innerHTML = pages.map((p, i) => {
+    const sev = (p.overall_severity || "pass").toLowerCase();
+    return `<button class="vqa-page-tab ${sev} ${i === 0 ? 'active' : ''}"
+      onclick="showVQAPage(${i})">${p.page} <span class="badge ${sev}" style="font-size:10px;">${p.overall_severity}</span></button>`;
+  }).join("");
+
+  vqaCurrentPage = 0;
+  showVQAPage(0);
+
+  document.getElementById("vqa-results").style.display = "block";
+  document.getElementById("vqa-export-btn").style.display = "inline-flex";
+  document.getElementById("vqa-results").scrollIntoView({ behavior: "smooth" });
+}
+
+function showVQAPage(idx) {
+  vqaCurrentPage = idx;
+  const pages = (vqaReport && vqaReport.page_reports) || [];
+  const page  = pages[idx];
+  if (!page) return;
+
+  // Update tab active state
+  document.querySelectorAll(".vqa-page-tab").forEach((btn, i) => {
+    btn.classList.toggle("active", i === idx);
+  });
+
+  // Images
+  const setImg = (id, b64) => {
+    const el = document.getElementById(id);
+    el.src = b64 ? `data:image/png;base64,${b64}` : "";
+    el.closest(".viewer-panel").style.display = b64 ? "" : "none";
+  };
+  setImg("vqa-img-figma", page.figma_image_b64);
+  setImg("vqa-img-live",  page.live_image_b64);
+  setImg("vqa-img-diff",  page.diff_image_b64);
+  document.getElementById("vqa-diff-label").textContent =
+    `Diff — ${page.diff_percent}% changed`;
+
+  // Issues
+  const issues = page.issues || [];
+  document.getElementById("vqa-issue-count").textContent =
+    issues.length ? `${issues.length} issue${issues.length > 1 ? "s" : ""} found` : "";
+
+  if (!issues.length) {
+    document.getElementById("vqa-issue-list").innerHTML =
+      `<div class="pass-banner">No issues found on ${page.page} — design matches live site.</div>`;
+    return;
+  }
+
+  document.getElementById("vqa-issue-list").innerHTML = issues.map((iss, i) => {
+    const sev = (iss.severity || "low").toLowerCase();
+    return `
+      <div class="issue-card ${sev}" id="issue-card-${i}">
+        <div class="issue-region">Region ${iss.region_index || i+1} · ${iss.diff_percent || 0}% diff</div>
+        <div class="issue-card-top">
+          <span class="badge ${sev}">${iss.severity || "Low"}</span>
+          <span class="issue-element">${escHtml(iss.element || "Unknown element")}</span>
+        </div>
+        <div class="issue-desc">${escHtml(iss.description || "")}</div>
+        ${iss.user_impact ? `<div class="issue-impact">User impact: ${escHtml(iss.user_impact)}</div>` : ""}
+      </div>`;
+  }).join("");
+}
+
+function vqaShowError(msg) {
+  const el = document.getElementById("vqa-error");
+  el.textContent = "Error: " + msg;
+  el.style.display = "block";
+}
+
+function clearVisualQA() {
+  if (vqaPollTimer) clearInterval(vqaPollTimer);
+  vqaReport = null; vqaJobId = null;
+  document.getElementById("vqa-shopify").value = "";
+  document.getElementById("vqa-figma").value   = "";
+  document.getElementById("vqa-password").value = "";
+  document.getElementById("vqa-error").style.display   = "none";
+  document.getElementById("vqa-results").style.display = "none";
+  document.getElementById("vqa-progress").className    = "progress-steps";
+  document.getElementById("vqa-export-btn").style.display = "none";
+  document.getElementById("vqa-start-btn").disabled    = false;
+}
+
+function exportVQAReport() {
+  if (!vqaReport) return;
+  // Strip base64 images from export to keep file size manageable
+  const exportData = JSON.parse(JSON.stringify(vqaReport));
+  (exportData.page_reports || []).forEach(p => {
+    delete p.figma_image_b64;
+    delete p.live_image_b64;
+    delete p.diff_image_b64;
+    delete p.diff_mask_b64;
+  });
+  triggerDownload(JSON.stringify(exportData, null, 2), "testrix_visual_qa_report.json", "application/json");
+}
+
+/* ══════════════════════════════════════════
+   AI CRAWL
+══════════════════════════════════════════ */
+let crawlReport = null;
+let crawlJobId  = null;
+let crawlPollTimer = null;
+
+const CRAWL_STEPS = ["discover", "inspect", "qa", "ai"];
+
+function crawlSetStep(active) {
+  const idx = CRAWL_STEPS.indexOf(active);
+  CRAWL_STEPS.forEach((key, i) => {
+    const el = document.getElementById("crawl-step-" + key);
+    if (!el) return;
+    el.className = "step-item" + (i < idx ? " done" : i === idx ? " active" : "");
+    el.querySelector(".step-dot").textContent = i < idx ? "✓" : String(i + 1);
+  });
+}
+
+function crawlSetAllDone() {
+  CRAWL_STEPS.forEach(key => {
+    const el = document.getElementById("crawl-step-" + key);
+    if (!el) return;
+    el.className = "step-item done";
+    el.querySelector(".step-dot").textContent = "✓";
+  });
+}
+
+function crawlProgressFromMessage(msg) {
+  if (!msg) return;
+  const m = msg.toLowerCase();
+  if (m.includes("discover") || m.includes("sitemap") || m.includes("crawl"))      crawlSetStep("discover");
+  else if (m.includes("browser") || m.includes("inspect") || m.includes("found"))  crawlSetStep("inspect");
+  else if (m.includes("qa") || m.includes("evaluation") || m.includes("evaluat"))  crawlSetStep("qa");
+  else if (m.includes("ai") || m.includes("review") || m.includes("recommend"))    crawlSetStep("ai");
+}
+
+async function startAICrawl() {
+  const seedUrl  = document.getElementById("crawl-url").value.trim();
+  const maxPages = parseInt(document.getElementById("crawl-max-pages").value) || 20;
+  const maxDepth = parseInt(document.getElementById("crawl-max-depth").value) || 2;
+
+  if (!seedUrl) { alert("Please enter a seed URL."); return; }
+
+  document.getElementById("crawl-error").style.display   = "none";
+  document.getElementById("crawl-results").style.display = "none";
+  document.getElementById("crawl-export-btn").style.display = "none";
+  document.getElementById("crawl-progress").className = "progress-steps visible";
+  document.getElementById("crawl-start-btn").disabled = true;
+  crawlSetStep("discover");
+  crawlReport = null;
+
+  try {
+    const res = await fetch("/ai-crawl", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seed_url: seedUrl, max_pages: maxPages, max_depth: maxDepth }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    crawlJobId = data.job_id;
+    pollCrawlJob();
+  } catch (e) {
+    crawlShowError(e.message);
+  }
+}
+
+function pollCrawlJob() {
+  if (crawlPollTimer) clearInterval(crawlPollTimer);
+  crawlPollTimer = setInterval(async () => {
+    try {
+      const res = await fetch(`/ai-crawl/${crawlJobId}`);
+      if (!res.ok) return;
+      const job = await res.json();
+
+      crawlProgressFromMessage(job.progress);
+
+      if (job.status === "complete") {
+        clearInterval(crawlPollTimer);
+        crawlSetAllDone();
+        crawlReport = job.result;
+        setTimeout(() => {
+          document.getElementById("crawl-progress").className = "progress-steps";
+          document.getElementById("crawl-start-btn").disabled = false;
+          renderCrawlReport(job.result);
+        }, 600);
+      } else if (job.status === "failed") {
+        clearInterval(crawlPollTimer);
+        document.getElementById("crawl-progress").className = "progress-steps";
+        document.getElementById("crawl-start-btn").disabled = false;
+        crawlShowError(job.error || "Job failed — check server logs for details.");
+      }
+    } catch (_) {}
+  }, 2500);
+}
+
+function renderCrawlReport(r) {
+  if (!r) return;
+  const sc = r.severity_counts || {};
+  const rec = (r.recommendation || "NO-GO").toUpperCase();
+
+  // Recommendation banner
+  const banner = document.getElementById("crawl-recommendation");
+  const isGo = rec === "GO";
+  banner.className = "recommendation-banner " + (isGo ? "go" : "nogo");
+  banner.textContent = isGo ? "✓ GO — Site cleared for release" : "✗ NO-GO — Issues require attention";
+
+  // KPIs
+  document.getElementById("crawl-kpi-found").textContent     = r.pages_discovered || 0;
+  document.getElementById("crawl-kpi-inspected").textContent = r.pages_inspected   || 0;
+  document.getElementById("crawl-kpi-critical").textContent  = sc.Critical || 0;
+  document.getElementById("crawl-kpi-high").textContent      = sc.High     || 0;
+  document.getElementById("crawl-kpi-medium").textContent    = sc.Medium   || 0;
+  document.getElementById("crawl-kpi-low").textContent       = sc.Low      || 0;
+  document.getElementById("crawl-kpi-a11y").textContent      = r.accessibility_blocker_count || 0;
+
+  // AI review panel
+  const aiReview = r.ai_review || {};
+  const obsLines = (aiReview.qa_observations || []).map(o => `<li>${escHtml(o)}</li>`).join("");
+  const bugLines = (aiReview.bug_summary     || []).map(b => `<li>${escHtml(b)}</li>`).join("");
+  const uxLines  = (aiReview.ux_analysis     || []).map(u => `<li>${escHtml(u)}</li>`).join("");
+  document.getElementById("crawl-ai-observations").innerHTML = `
+    ${aiReview.rationale ? `<p style="margin-bottom:10px;font-size:13px;color:#374151;">${escHtml(aiReview.rationale)}</p>` : ""}
+    ${obsLines ? `<strong style="font-size:12px;color:#6b7280;">QA Observations</strong><ul style="padding-left:18px;font-size:13px;line-height:2;color:#374151;margin-bottom:8px;">${obsLines}</ul>` : ""}
+    ${bugLines ? `<strong style="font-size:12px;color:#6b7280;">Bug Summary</strong><ul style="padding-left:18px;font-size:13px;line-height:2;color:#374151;margin-bottom:8px;">${bugLines}</ul>` : ""}
+    ${uxLines  ? `<strong style="font-size:12px;color:#6b7280;">UX Analysis</strong><ul style="padding-left:18px;font-size:13px;line-height:2;color:#374151;">${uxLines}</ul>` : ""}
+  ` || "<p style='font-size:13px;color:#9ca3af;'>No AI observations returned.</p>";
+
+  // Findings list
+  const findings = r.findings || [];
+  document.getElementById("crawl-finding-count").textContent =
+    findings.length ? `${findings.length} finding${findings.length !== 1 ? "s" : ""}` : "";
+
+  if (!findings.length) {
+    document.getElementById("crawl-findings-list").innerHTML =
+      `<div class="pass-banner">No findings — site passed all checks.</div>`;
+  } else {
+    document.getElementById("crawl-findings-list").innerHTML = findings.map(f => {
+      const sev = (f.severity || "low").toLowerCase();
+      return `
+        <div class="issue-card ${sev}">
+          <div class="issue-card-top">
+            <span class="badge ${sev}">${f.severity || "Low"}</span>
+            <span class="issue-element">${escHtml(f.title || "")}</span>
+          </div>
+          ${f.page ? `<div style="font-size:11px;color:#94a3b8;margin-bottom:4px;">Page: ${escHtml(f.page)}</div>` : ""}
+          <div class="issue-desc">${escHtml(f.category || "")} — ${escHtml(f.priority || "")}</div>
+          ${f.evidence ? `<div class="issue-impact">${escHtml(f.evidence)}</div>` : ""}
+        </div>`;
+    }).join("");
+  }
+
+  // Page observations grid
+  const groups = {};
+  (r.observations || []).forEach(o => {
+    groups[o.page] = groups[o.page] || [];
+    groups[o.page].push(o);
+  });
+
+  document.getElementById("crawl-observations").innerHTML = Object.entries(groups).map(([page, obs]) => {
+    const cards = obs.map(o => {
+      const errCount = (o.console_errors || []).length;
+      const netFail  = (o.network_failures || []).length;
+      const a11y     = (o.accessibility_notes || []).length;
+      const errTag   = errCount ? `<span class="ai-obs-tag tag-error">${errCount} console err</span>` : "";
+      const netTag   = netFail  ? `<span class="ai-obs-tag tag-error">${netFail} net fail</span>` : "";
+      const a11yTag  = a11y     ? `<span class="ai-obs-tag tag-warn">${a11y} a11y note${a11y > 1 ? "s" : ""}</span>` : "";
+      const okTag    = (!errCount && !netFail) ? `<span class="ai-obs-tag tag-ok">clean</span>` : "";
+      const errLine  = o.error ? `<div style="color:#b91c1c;font-size:11px;margin-top:4px;">${escHtml(o.error)}</div>` : "";
+      return `
+        <div class="ai-obs-card">
+          <div class="ai-obs-card-title">${escHtml(o.viewport || "")} — <code style="font-size:11px;">${escHtml(o.url || "")}</code></div>
+          <div>${errTag}${netTag}${a11yTag}${okTag}</div>
+          ${errLine}
+          ${(o.accessibility_notes || []).slice(0, 2).map(n => `<div style="font-size:11px;color:#6b7280;margin-top:2px;">${escHtml(n)}</div>`).join("")}
+        </div>`;
+    }).join("");
+    return `
+      <div class="finding-page-section">
+        <div class="finding-page-label">${escHtml(page)}</div>
+        <div class="ai-obs-grid">${cards}</div>
+      </div>`;
+  }).join("") || "<p style='font-size:13px;color:#9ca3af;'>No observation data.</p>";
+
+  document.getElementById("crawl-results").style.display = "block";
+  document.getElementById("crawl-export-btn").style.display = "inline-flex";
+  document.getElementById("crawl-results").scrollIntoView({ behavior: "smooth" });
+}
+
+function crawlShowError(msg) {
+  const el = document.getElementById("crawl-error");
+  el.textContent = "Error: " + msg;
+  el.style.display = "block";
+}
+
+function clearAICrawl() {
+  if (crawlPollTimer) clearInterval(crawlPollTimer);
+  crawlReport = null; crawlJobId = null;
+  document.getElementById("crawl-url").value = "";
+  document.getElementById("crawl-error").style.display    = "none";
+  document.getElementById("crawl-results").style.display  = "none";
+  document.getElementById("crawl-progress").className     = "progress-steps";
+  document.getElementById("crawl-export-btn").style.display = "none";
+  document.getElementById("crawl-start-btn").disabled     = false;
+}
+
+function exportCrawlReport() {
+  if (!crawlReport) return;
+  triggerDownload(JSON.stringify(crawlReport, null, 2), "testrix_crawl_report.json", "application/json");
+}
+
+/* ── Lightbox ── */
+function openLightbox(imgId) {
+  const src = document.getElementById(imgId).src;
+  if (!src) return;
+  document.getElementById("lightbox-img").src = src;
+  document.getElementById("lightbox").classList.add("open");
+}
+function closeLightbox() {
+  document.getElementById("lightbox").classList.remove("open");
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeLightbox(); });
+</script>
+
+</body>
+</html>
