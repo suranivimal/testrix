@@ -59,8 +59,11 @@ def _crop_region(img_bytes: bytes, x: int, y: int, w: int, h: int) -> str:
 
     x1 = max(0, x - _CROP_PADDING)
     y1 = max(0, y - _CROP_PADDING)
-    x2 = min(img.width, x + w + _CROP_PADDING)
-    y2 = min(img.height, y + h + _CROP_PADDING)
+    x2 = min(img.width,  x + max(w, 1) + _CROP_PADDING)
+    y2 = min(img.height, y + max(h, 1) + _CROP_PADDING)
+    # Ensure valid box (can happen when region coords exceed normalised image size)
+    x2 = max(x1 + 1, x2)
+    y2 = max(y1 + 1, y2)
 
     cropped = img.crop((x1, y1, x2, y2))
     buf = io.BytesIO()
@@ -211,7 +214,7 @@ Return only the JSON array, no markdown fences."""
                 issue["diff_screenshot_url"]      = f"/screenshots/diff/{job_id}/{slug}"
                 logger.info(f"Crops saved — job={job_id}, page={page_name}, issue={i+1}")
         except Exception as exc:
-            logger.warning(f"Crop failed — page={page_name}, region={idx}: {exc}")
+            logger.warning(f"Crop failed — page={page_name}, issue={i+1}: {exc}")
 
     return issues
 
