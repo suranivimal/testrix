@@ -165,12 +165,11 @@ Return only the JSON array, no markdown fences."""
     expected_dir = output_root / "expected" / (job_id or "tmp")
     diff_dir     = output_root / "diff"     / (job_id or "tmp")
 
-    for issue in issues:
+    for i, issue in enumerate(issues):
         if not all(k in issue for k in ("x", "y", "width", "height")):
             continue
         x, y, w, h = issue["x"], issue["y"], issue["width"], issue["height"]
-        idx = issue.get("region_index", 1)
-        slug = f"{page_name}_r{idx}.jpg"
+        slug = f"{page_name}_i{i+1}.jpg"   # use position, not region_index, to avoid collisions
         try:
             issue["expected_crop_b64"] = _crop_region(figma_bytes, x, y, w, h)
             issue["actual_crop_b64"]   = _crop_region(live_bytes,  x, y, w, h)
@@ -184,7 +183,7 @@ Return only the JSON array, no markdown fences."""
                 issue["expected_screenshot_url"]  = f"/screenshots/expected/{job_id}/{slug}"
                 issue["actual_screenshot_url"]    = f"/screenshots/current/{job_id}/{slug}"
                 issue["diff_screenshot_url"]      = f"/screenshots/diff/{job_id}/{slug}"
-                logger.info(f"Crops saved — job={job_id}, page={page_name}, region={idx}")
+                logger.info(f"Crops saved — job={job_id}, page={page_name}, issue={i+1}")
         except Exception as exc:
             logger.warning(f"Crop failed — page={page_name}, region={idx}: {exc}")
 
@@ -203,15 +202,21 @@ def _parse_response(raw: str, regions: list[DiffRegion]) -> list[dict]:
     try:
         parsed = json.loads(raw)
         if isinstance(parsed, list):
-            for item in parsed:
-                idx = item.get("region_index", 1) - 1
-                if 0 <= idx < len(regions):
-                    r = regions[idx]
-                    item["x"] = r.x
-                    item["y"] = r.y
-                    item["width"] = r.width
-                    item["height"] = r.height
-                    item["diff_percent"] = r.diff_percent
+            for i, item in enumerate(parsed):
+                # Try to match by the AI-supplied region_index first
+                ai_idx = item.get("region_index", 1) - 1
+                r = regions[ai_idx] if 0 <= ai_idx < len(regions) else None
+                # Positional fallback: if region_index is out of range or already
+                # used (AI often returns 1 for every issue), fall back to position i
+                if r is None or ("x" in item):
+                    r = regions[i] if i < len(regions) else regions[-1]
+                item["x"] = r.x
+                item["y"] = r.y
+                item["width"] = r.width
+                item["height"] = r.height
+                item["diff_percent"] = r.diff_percent
+                # Normalise region_index so it matches the actual region used
+                item["region_index"] = regions.index(r) + 1
             return parsed
     except Exception as e:
         logger.warning(f"Failed to parse Groq vision JSON: {e} — using fallback")
