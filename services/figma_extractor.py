@@ -237,9 +237,11 @@ async def _download_png(img_url: str, frame_name: str) -> bytes:
 # Public API — cache + dedup lock layer
 # ─────────────────────────────────────────────────────────────────────────────
 
-async def extract_frames(figma_url: str) -> list[dict]:
+async def extract_frames(figma_url: str) -> tuple[list[dict], dict]:
     """
-    Return a list of frame dicts: { name, node_id, image_bytes, width, height }
+    Return (frames, typography) where:
+      frames     — list of { name, node_id, image_bytes, width, height }
+      typography — { fonts, sizes, weights, colors } extracted from TEXT nodes
 
     Caches results for _CACHE_TTL_S seconds so back-to-back jobs for the same
     Figma file make zero additional API calls — eliminating the 429 chain.
@@ -252,14 +254,14 @@ async def extract_frames(figma_url: str) -> list[dict]:
     # ── Fast path: serve from cache ──────────────────────────────────────────
     cached = _frame_cache.get(cache_key)
     if cached:
-        fetched_at, results = cached
+        fetched_at, results, typography = cached
         age = time.monotonic() - fetched_at
         if age < _CACHE_TTL_S:
             logger.info(
                 f"Figma cache hit — key={cache_key}, age={age:.0f}s, "
                 f"ttl_remaining={_CACHE_TTL_S - age:.0f}s, frames={len(results)}"
             )
-            return results
+            return results, typography
         logger.info(f"Figma cache expired — key={cache_key}, age={age:.0f}s, re-fetching")
 
     # ── Dedup lock: one fetch per file at a time ─────────────────────────────
@@ -270,18 +272,18 @@ async def extract_frames(figma_url: str) -> list[dict]:
         # Another waiter may have populated the cache while we were waiting
         cached = _frame_cache.get(cache_key)
         if cached:
-            fetched_at, results = cached
+            fetched_at, results, typography = cached
             if time.monotonic() - fetched_at < _CACHE_TTL_S:
                 logger.info(f"Figma cache hit (post-lock) — key={cache_key}, frames={len(results)}")
-                return results
+                return results, typography
 
-        results = await _fetch_frames(token, file_key, node_id)
-        _frame_cache[cache_key] = (time.monotonic(), results)
+        results, typography = await _fetch_frames(token, file_key, node_id)
+        _frame_cache[cache_key] = (time.monotonic(), results, typography)
         logger.info(
             f"Figma frames cached — key={cache_key}, frames={len(results)}, "
-            f"ttl={_CACHE_TTL_S}s"
+            f"fonts={typography['fonts']}, ttl={_CACHE_TTL_S}s"
         )
-        return results
+        return results, typography
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -292,9 +294,9 @@ async def _fetch_frames(token: str, file_key: str, node_id: str | None) -> list[
     """Hit the Figma API and download frame PNGs. No caching — use extract_frames."""
     headers = {"X-Figma-Token": token}
 
-    # Step 1: file structure
+    # Step 1: file structure (depth 3 to reach TEXT nodes inside frames for typography)
     logger.info(f"Figma fetch start — key={file_key}, node_id={node_id or 'all'}")
-    file_resp = await _api_get(f"/files/{file_key}", headers, params={"depth": 2})
+    file_resp = await _api_get(f"/files/{file_key}", headers, params={"depth": 3})
     file_data = file_resp.json()
 
     frames = _collect_frames(file_data, node_id)
@@ -338,8 +340,12 @@ async def _fetch_frames(token: str, file_key: str, node_id: str | None) -> list[
             "height": frame.get("height"),
         })
 
-    logger.info(f"Figma fetch complete — key={file_key}, {len(results)} frame(s) downloaded")
-    return results
+    typography = _collect_typography(file_data)
+    logger.info(
+        f"Figma fetch complete — key={file_key}, {len(results)} frame(s) downloaded, "
+        f"fonts={typography['fonts']}"
+    )
+    return results, typography
 
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -379,3 +385,49 @@ def _collect_frames(file_data: dict, target_node_id: str | None) -> list[dict]:
             walk(child)
 
     return frames
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Typography token extractor
+# ─────────────────────────────────────────────────────────────────────────────
+
+def _collect_typography(file_data: dict) -> dict:
+    """
+    Walk the full document tree and collect unique typography values from TEXT nodes.
+    Returns { fonts, sizes, weights, colors } — all sorted lists of unique values.
+    """
+    fonts: set[str]   = set()
+    sizes: set[int]   = set()
+    weights: set[int] = set()
+    colors: set[str]  = set()
+
+    def walk(node: dict) -> None:
+        if node.get("type") == "TEXT":
+            style = node.get("style", {})
+            if ff := style.get("fontFamily"):
+                fonts.add(ff)
+            if fs := style.get("fontSize"):
+                sizes.add(int(fs))
+            if fw := style.get("fontWeight"):
+                weights.add(int(fw))
+            for fill in node.get("fills", []):
+                c = fill.get("color", {})
+                if c:
+                    r = int(c.get("r", 0) * 255)
+                    g = int(c.get("g", 0) * 255)
+                    b = int(c.get("b", 0) * 255)
+                    colors.add(f"rgb({r},{g},{b})")
+        for child in node.get("children", []):
+            walk(child)
+
+    document = file_data.get("document", {})
+    for page in document.get("children", []):
+        for child in page.get("children", []):
+            walk(child)
+
+    return {
+        "fonts":   sorted(fonts),
+        "sizes":   sorted(sizes),
+        "weights": sorted(weights),
+        "colors":  sorted(colors),
+    }

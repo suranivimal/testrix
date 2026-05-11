@@ -82,6 +82,7 @@ def analyze(
     compare_result: CompareResult,
     page_name: str = "page",
     job_id: str = "",
+    figma_typography: dict | None = None,
 ) -> list[dict]:
     """
     Send Figma + live screenshots to Groq vision and get structured issue descriptions.
@@ -109,26 +110,51 @@ def analyze(
         )
     region_summary = "\n".join(region_lines)
 
+    # Build typography context block from extracted Figma tokens
+    typo = figma_typography or {}
+    typo_lines = []
+    if typo.get("fonts"):
+        typo_lines.append(f"  - Font families: {', '.join(typo['fonts'])}")
+    if typo.get("sizes"):
+        typo_lines.append(f"  - Font sizes: {', '.join(str(s) + 'px' for s in typo['sizes'])}")
+    if typo.get("weights"):
+        weight_names = {100: "Thin", 200: "ExtraLight", 300: "Light", 400: "Regular",
+                        500: "Medium", 600: "SemiBold", 700: "Bold", 800: "ExtraBold", 900: "Black"}
+        wts = [f"{w} ({weight_names.get(w, '')})" for w in typo["weights"]]
+        typo_lines.append(f"  - Font weights: {', '.join(wts)}")
+    if typo.get("colors"):
+        typo_lines.append(f"  - Text colors: {', '.join(typo['colors'][:8])}")
+
+    typo_section = ""
+    if typo_lines:
+        typo_section = (
+            "\n\nThe Figma design specifies these typography tokens:\n"
+            + "\n".join(typo_lines)
+            + "\n\nCompare the live site against these specifications."
+        )
+
     prompt = f"""I'm comparing a Figma design mockup (Image 1) against the live Shopify store screenshot (Image 2) for the **{page_name}** page.
 
 The automated pixel diff found {len(compare_result.regions)} changed region(s) with an overall {compare_result.diff_percent}% pixel difference:
 
-{region_summary}
+{region_summary}{typo_section}
 
-For each region, examine both images and describe:
-1. What UI element is in that area (e.g. navigation bar, hero banner, product card, CTA button)
-2. What specifically differs between the design and the live site
-3. The likely user impact
-4. A concise suggested fix (code or design change) to make the live site match the Figma design
+For each region, examine both images carefully and check ALL of the following:
+1. **Element** — what UI element is in that area (nav, hero, product card, button, heading, body text, etc.)
+2. **Visual differences** — layout, colours, sizing, positioning
+3. **Typography** — font family, font size, font weight, letter spacing, line height, text colour, text alignment
+4. **User impact** — how this harms usability, brand trust, or conversions
+5. **Suggested fix** — specific CSS property or design change to match the Figma spec
 
 Return a JSON array with one object per region:
 [
   {{
     "region_index": 1,
     "element": "element name",
-    "description": "what specifically differs",
+    "description": "what specifically differs (include typography details if relevant)",
     "user_impact": "how this affects users",
-    "suggested_fix": "recommended change to match the Figma design"
+    "suggested_fix": "specific change to match the Figma design",
+    "issue_type": "typography | layout | color | spacing | image | other"
   }}
 ]
 
@@ -228,6 +254,7 @@ def _parse_response(raw: str, regions: list[DiffRegion]) -> list[dict]:
             "description": raw[:300] if i == 0 else "See region 1 for full analysis",
             "user_impact": "Visual discrepancy detected",
             "suggested_fix": "",
+            "issue_type": "other",
             "x": r.x, "y": r.y, "width": r.width, "height": r.height,
             "diff_percent": r.diff_percent,
         }

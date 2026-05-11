@@ -42,14 +42,15 @@ async def run_visual_qa(
         )
 
         try:
-            figma_frames, shopify_pages = await asyncio.gather(figma_task, shopify_task)
+            (figma_frames, figma_typography), shopify_pages = await asyncio.gather(figma_task, shopify_task)
         except Exception as e:
             await _fail(job_id, f"Fetch failed: {e}")
             raise
 
         logger.info(
             f"Job {job_id}: {len(figma_frames)} Figma frame(s), "
-            f"{len(shopify_pages)} Shopify page(s)"
+            f"{len(shopify_pages)} Shopify page(s), "
+            f"fonts={figma_typography.get('fonts', [])}"
         )
 
         if not figma_frames:
@@ -97,6 +98,7 @@ async def run_visual_qa(
                     compare_result,
                     page_name,
                     job_id,
+                    figma_typography,
                 )
                 issues = await classify_all(issues)
             else:

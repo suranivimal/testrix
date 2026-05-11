@@ -19,6 +19,11 @@ _HIGH_KEYWORDS = (
     "hero", "banner", "headline", "title", "price", "product image",
     "featured", "promotion", "sale", "discount", "badge",
 )
+_MEDIUM_KEYWORDS = (
+    "typography", "font", "typeface", "text", "heading", "paragraph",
+    "label", "caption", "body text", "letter spacing", "line height",
+    "font size", "font weight", "alignment",
+)
 _LOW_KEYWORDS = (
     "footer", "shadow", "border", "icon", "tooltip", "hover",
     "background", "divider", "separator",
@@ -40,6 +45,10 @@ def _rule_based(element: str, diff_percent: float) -> str:
     if any(kw in el for kw in _HIGH_KEYWORDS):
         return "High" if diff_percent >= 5.0 else "Medium"
 
+    # Medium: typography elements — visible but not blocking
+    if any(kw in el for kw in _MEDIUM_KEYWORDS):
+        return "Medium" if diff_percent >= 2.0 else "Low"
+
     # Low: decorative elements
     if any(kw in el for kw in _LOW_KEYWORDS):
         return "Low"
@@ -58,6 +67,7 @@ _LLM_PROMPT = """You are classifying UI bugs by severity for a Shopify storefron
 
 Bug details:
 - Element: {element}
+- Issue type: {issue_type}
 - Description: {description}
 - User impact: {user_impact}
 - Pixel diff: {diff_percent}% of the region differs
@@ -69,6 +79,9 @@ Severity definitions:
 - Medium: layout/spacing/typography issues visible but not blocking
 - Low: minor cosmetic differences (shadows, borders, decorative elements)
 
+Typography issues (wrong font family, size, weight, color) are at least Medium.
+If typography affects a headline, hero, or CTA, classify as High.
+
 Reply with exactly one word — the severity level: Critical, High, Medium, or Low.
 Do not explain."""
 
@@ -79,6 +92,7 @@ async def classify_issue(issue: dict) -> dict:
     Mutates and returns the issue dict.
     """
     element = issue.get("element", "Unknown element")
+    issue_type = issue.get("issue_type", "other")
     description = issue.get("description", "")
     user_impact = issue.get("user_impact", "")
     diff_percent = issue.get("diff_percent", 0.0)
@@ -95,6 +109,7 @@ async def classify_issue(issue: dict) -> dict:
         try:
             prompt = _LLM_PROMPT.format(
                 element=element,
+                issue_type=issue_type,
                 description=description[:300],
                 user_impact=user_impact[:200],
                 diff_percent=diff_percent,

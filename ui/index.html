@@ -604,6 +604,15 @@
     }
     .issue-diff-badge.high-diff   { background: #fef2f2; color: #b91c1c; }
     .issue-diff-badge.medium-diff { background: #fff7ed; color: #c2410c; }
+    .issue-type-badge {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; border-radius: 4px; padding: 2px 7px;
+    }
+    .issue-type-badge.typography { background: #fdf4ff; color: #9333ea; }
+    .issue-type-badge.layout     { background: #eff6ff; color: #1d4ed8; }
+    .issue-type-badge.color      { background: #fff7ed; color: #c2410c; }
+    .issue-type-badge.spacing    { background: #f0fdf4; color: #15803d; }
+    .issue-type-badge.image      { background: #fefce8; color: #a16207; }
 
     /* Body text */
     .issue-desc   { font-size: 13px; color: #374151; margin-bottom: 5px; line-height: 1.55; }
@@ -1846,6 +1855,7 @@ function showVQAPage(idx) {
         <div class="issue-header">
           <div class="issue-header-left">
             <span class="badge ${sev}">${iss.severity || "Low"}</span>
+            ${iss.issue_type && iss.issue_type !== "other" ? `<span class="issue-type-badge ${iss.issue_type}">${iss.issue_type}</span>` : ""}
             <span class="issue-element">${escHtml(iss.element || "Unknown element")}</span>
           </div>
           <span class="issue-diff-badge ${diffCls}">Region ${iss.region_index || i+1} &middot; ${diffPct}% diff</span>
