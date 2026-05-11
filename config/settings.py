@@ -15,8 +15,8 @@ class Settings:
     claude_api_key: str = os.getenv("CLAUDE_API_KEY", "")
     groq_api_key: str = os.getenv("GROQ_API_KEY", "")
 
-    llm_provider: str = os.getenv("LLM_PROVIDER", "openai")
-    llm_model: str = os.getenv("LLM_MODEL", "gpt-4.1-mini")
+    llm_provider: str = os.getenv("LLM_PROVIDER", "groq")
+    llm_model: str = os.getenv("LLM_MODEL", "llama-3.3-70b-versatile")
     llm_temperature: float = float(os.getenv("LLM_TEMPERATURE", "0.2"))
 
     figma_api_token: str = os.getenv("FIGMA_API_TOKEN", "")
