@@ -1,6 +1,6 @@
 from dataclasses import asdict
 
-from agent.llm_client import LLMClient
+from agents.llm_client import LLMClient
 from qa.models import RequirementModel
 from utils.file_io import read_requirements_file
 

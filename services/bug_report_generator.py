@@ -122,4 +122,8 @@ def _strip_heavy_images(report: dict) -> dict:
         page.pop("live_image_b64", None)
         page.pop("diff_image_b64", None)
         page.pop("diff_mask_b64", None)
+        for issue in page.get("issues", []):
+            issue.pop("expected_crop_b64", None)
+            issue.pop("actual_crop_b64", None)
+            issue.pop("diff_crop_b64", None)
     return light

@@ -20,17 +20,17 @@ def _get_db():
         if _db is not None:
             return _db
 
-    embedding = HuggingFaceEmbeddings()
+        embedding = HuggingFaceEmbeddings()
 
-    if os.path.exists(_INDEX_PATH):
-        logger.info("Loading FAISS index from disk")
-        _db = FAISS.load_local(_INDEX_PATH, embedding, allow_dangerous_deserialization=True)
-    else:
-        logger.info("Building FAISS index from data files")
-        docs = load_data()
-        _db = FAISS.from_texts(docs, embedding)
-        _db.save_local(_INDEX_PATH)
-        logger.info(f"FAISS index saved to {_INDEX_PATH}/")
+        if os.path.exists(_INDEX_PATH):
+            logger.info("Loading FAISS index from disk")
+            _db = FAISS.load_local(_INDEX_PATH, embedding, allow_dangerous_deserialization=True)
+        else:
+            logger.info("Building FAISS index from data files")
+            docs = load_data()
+            _db = FAISS.from_texts(docs, embedding)
+            _db.save_local(_INDEX_PATH)
+            logger.info(f"FAISS index saved to {_INDEX_PATH}/")
 
     return _db
 

@@ -1,6 +1,7 @@
 import os
 import json
 from dataclasses import dataclass, field
+from functools import lru_cache
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -60,5 +61,6 @@ class Settings:
             return {}
 
 
+@lru_cache(maxsize=1)
 def get_settings() -> Settings:
     return Settings()

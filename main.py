@@ -4,9 +4,9 @@ import json
 import logging
 from dataclasses import asdict
 
-from agent.ai_reviewer import AIReviewer
-from agent.llm_client import LLMClient
-from agent.requirement_analyzer import RequirementAnalyzer
+from agents.ai_reviewer import AIReviewer
+from agents.llm_client import LLMClient
+from agents.requirement_analyzer import RequirementAnalyzer
 from browser.browser_agent import BrowserAgent
 from config.settings import get_settings
 from figma.figma_analyzer import FigmaAnalyzer

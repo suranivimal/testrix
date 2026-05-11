@@ -60,6 +60,12 @@ app.add_middleware(
 
 app.mount("/ui", StaticFiles(directory="ui"), name="ui")
 
+# Serve per-job region screenshots.  Create the dir first so StaticFiles
+# doesn't throw if no VQA job has run yet.
+from pathlib import Path as _Path
+_Path("artifacts/screenshots").mkdir(parents=True, exist_ok=True)
+app.mount("/screenshots", StaticFiles(directory="artifacts/screenshots"), name="screenshots")
+
 
 # ---------- Request models ----------
 

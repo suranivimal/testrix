@@ -14,8 +14,8 @@ from dataclasses import asdict
 
 from fastapi.concurrency import run_in_threadpool
 
-from agent.ai_reviewer import AIReviewer
-from agent.llm_client import LLMClient
+from agents.ai_reviewer import AIReviewer
+from agents.llm_client import LLMClient
 from browser.browser_agent import BrowserAgent
 from config.settings import get_settings
 from qa.models import RequirementModel

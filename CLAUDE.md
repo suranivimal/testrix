@@ -11,7 +11,7 @@ Testrix is an AI-powered QA automation platform. It analyzes bug descriptions, g
 | Language | Python 3.13 |
 | Web Framework | FastAPI + Uvicorn |
 | LLM (text) | Groq API — `llama-3.3-70b-versatile` |
-| LLM (vision) | Groq API — `llama-3.2-11b-vision-preview` |
+| LLM (vision) | Groq API — `meta-llama/llama-4-scout-17b-16e-instruct` |
 | Vector Store | FAISS + HuggingFace Sentence-Transformers |
 | Browser Automation | Playwright (sync, runs in thread pool) |
 | Image Processing | Pillow |
@@ -23,7 +23,7 @@ Testrix is an AI-powered QA automation platform. It analyzes bug descriptions, g
 ```
 testrix/
 ├── app.py                          # FastAPI entry point, all API routes
-├── db.py                           # MongoDB: history + visual_qa_jobs collections
+├── main.py                         # CLI pipeline entry point (--requirements, --url)
 ├── requirements.txt
 ├── .env                            # API keys (not committed)
 ├── .env.example                    # Key reference — copy to .env
@@ -31,7 +31,11 @@ testrix/
 ├── agents/
 │   ├── agent_manager.py            # Orchestrates bug + test case flow (parallel)
 │   ├── bug_agent.py                # Bug analysis → structured JSON
-│   └── visual_qa_agent.py          # Visual QA pipeline orchestrator
+│   ├── visual_qa_agent.py          # Visual QA pipeline orchestrator
+│   ├── ai_crawl_agent.py           # AI crawl pipeline orchestrator
+│   ├── llm_client.py               # Configurable LLM client (groq/openai/claude)
+│   ├── ai_reviewer.py              # GO/NO-GO reviewer for AI crawl
+│   └── requirement_analyzer.py     # Requirements file parser for AI crawl
 │
 ├── ai_engine/
 │   ├── llm.py                      # Groq AsyncOpenAI wrapper
@@ -39,11 +43,13 @@ testrix/
 │   └── utils.py                    # JSON extraction helpers
 │
 ├── services/
+│   ├── db.py                       # MongoDB: history + visual_qa_jobs + ai_crawl_jobs
 │   ├── bug_analysis_service.py     # RAG-enhanced bug analysis
 │   ├── test_case_service.py        # RAG-enhanced test case generation
 │   ├── test_runner.py              # Playwright API test runner
-│   ├── figma_extractor.py          # Figma REST API — fetch + export frames
+│   ├── figma_extractor.py          # Figma REST API — cached, throttled, retry
 │   ├── shopify_scraper.py          # Playwright sync scraper (SSRF-safe)
+│   ├── site_crawler.py             # Sitemap + BFS HTML link crawler
 │   ├── visual_comparator.py        # Pillow pixel diff + BFS region detection
 │   ├── visual_ai_analyzer.py       # Groq vision — batched region analysis
 │   ├── severity_classifier.py      # Rule-based + LLM severity scoring
@@ -130,7 +136,7 @@ POST /visual-qa → MongoDB job (pending) → BackgroundTask
 
 - **CORS** is open (`allow_origins=["*"]`) — restrict before production.
 - **LLM text model**: `llama-3.3-70b-versatile` via Groq's OpenAI-compatible endpoint.
-- **LLM vision model**: `llama-3.2-11b-vision-preview` — called once per page with all diff regions batched.
+- **LLM vision model**: `meta-llama/llama-4-scout-17b-16e-instruct` — called once per page with all diff regions batched.
 - **Playwright**: sync API running in `run_in_threadpool` — avoids Windows `SelectorEventLoop` subprocess error.
 - **RAG retrieval**: Top-2 FAISS similarity results from `data/bugs.txt` and `data/test_cases.txt`.
 - **Vector store**: Lazy-loaded on first request and cached in memory.

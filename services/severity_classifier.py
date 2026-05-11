@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import re
 
@@ -113,7 +114,6 @@ async def classify_issue(issue: dict) -> dict:
 
 async def classify_all(issues: list[dict]) -> list[dict]:
     """Classify all issues and sort by severity (Critical first)."""
-    import asyncio
     classified = await asyncio.gather(*[classify_issue(issue) for issue in issues])
     severity_order = {s: i for i, s in enumerate(SEVERITIES)}
     return sorted(classified, key=lambda x: severity_order.get(x.get("severity", "Low"), 99))

@@ -96,6 +96,7 @@ async def run_visual_qa(
                     shopify_page["screenshot"],
                     compare_result,
                     page_name,
+                    job_id,
                 )
                 issues = await classify_all(issues)
             else:

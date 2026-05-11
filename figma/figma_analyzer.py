@@ -17,16 +17,22 @@ class FigmaAnalyzer:
         headers = {"X-Figma-Token": self.figma_token}
 
         async def load_file() -> dict:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(
+                timeout=httpx.Timeout(connect=10, read=60, write=10, pool=10)
+            ) as client:
                 resp = await client.get(
                     f"https://api.figma.com/v1/files/{file_key}",
                     headers=headers,
                     params={"depth": 3},
                 )
+                if resp.status_code == 401:
+                    raise ValueError("Figma 401 — FIGMA_API_TOKEN is invalid or expired.")
+                if resp.status_code == 403:
+                    raise ValueError("Figma 403 — token does not have access to this file.")
                 resp.raise_for_status()
                 return resp.json()
 
-        payload = await with_retry(load_file, retries=3, base_delay=1.2)
+        payload = await with_retry(load_file, retries=5, base_delay=15.0)
         target_nodes = self._collect_nodes(payload.get("document", {}), node_id)
 
         return FigmaBaseline(

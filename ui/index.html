@@ -577,26 +577,115 @@
     .issue-list-header h3 { font-size: 15px; font-weight: 600; color: #374151; margin: 0; }
     .issue-card {
       border: 1.5px solid #e5e7eb;
-      border-radius: 9px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      transition: border-color .15s, box-shadow .15s;
-      cursor: default;
-      position: relative;
+      border-radius: 10px;
+      padding: 16px 18px;
+      margin-bottom: 12px;
+      transition: box-shadow .15s;
+      background: #fff;
     }
-    .issue-card:hover { box-shadow: 0 2px 10px rgba(0,0,0,.08); }
+    .issue-card:hover { box-shadow: 0 3px 14px rgba(0,0,0,.09); }
     .issue-card.critical { border-left: 4px solid #dc2626; }
     .issue-card.high     { border-left: 4px solid #ea580c; }
     .issue-card.medium   { border-left: 4px solid #2563eb; }
     .issue-card.low      { border-left: 4px solid #6b7280; }
-    .issue-card-top { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
-    .issue-element { font-size: 13px; font-weight: 600; color: #0f172a; }
-    .issue-desc { font-size: 13px; color: #374151; margin-bottom: 4px; line-height: 1.5; }
-    .issue-impact { font-size: 12px; color: #6b7280; }
-    .issue-region {
-      font-size: 11px; color: #94a3b8;
-      position: absolute; top: 12px; right: 14px;
+
+    /* Issue header row */
+    .issue-header {
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 8px; margin-bottom: 8px;
     }
+    .issue-header-left { display: flex; align-items: center; gap: 8px; }
+    .issue-element { font-size: 14px; font-weight: 600; color: #0f172a; }
+    .issue-diff-badge {
+      font-size: 11px; font-weight: 600;
+      background: #f1f5f9; color: #64748b;
+      border-radius: 20px; padding: 3px 10px;
+      white-space: nowrap;
+    }
+    .issue-diff-badge.high-diff   { background: #fef2f2; color: #b91c1c; }
+    .issue-diff-badge.medium-diff { background: #fff7ed; color: #c2410c; }
+
+    /* Body text */
+    .issue-desc   { font-size: 13px; color: #374151; margin-bottom: 5px; line-height: 1.55; }
+    .issue-impact { font-size: 12px; color: #6b7280; margin-bottom: 2px; }
+
+    /* ── Screenshot comparison grid ── */
+    .issue-crops {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+    @media (max-width: 700px) {
+      .issue-crops { grid-template-columns: 1fr; }
+    }
+    @media (min-width: 701px) and (max-width: 1000px) {
+      .issue-crops { grid-template-columns: 1fr 1fr; }
+    }
+    .issue-crop-box { display: flex; flex-direction: column; gap: 6px; }
+    .issue-crop-header {
+      display: flex; align-items: center; justify-content: space-between; min-height: 18px;
+    }
+    .issue-crop-label {
+      font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.7px;
+    }
+    .issue-crop-label.expected { color: #2563eb; }
+    .issue-crop-label.actual   { color: #dc2626; }
+    .issue-crop-label.diff-lbl { color: #d97706; }
+    .issue-crop-zoom {
+      font-size: 14px; color: #94a3b8; cursor: pointer;
+      background: none; border: none; padding: 0; line-height: 1;
+      transition: color .15s;
+    }
+    .issue-crop-zoom:hover { color: #374151; }
+
+    /* Image container with loading shimmer */
+    .issue-crop-wrap {
+      position: relative; overflow: hidden; min-height: 80px;
+      border-radius: 8px; border: 1.5px solid #e5e7eb;
+      background: #f8fafc; cursor: zoom-in;
+      transition: border-color .15s, box-shadow .15s;
+    }
+    .issue-crop-wrap::before {
+      content: ""; position: absolute; inset: 0; z-index: 1;
+      background: linear-gradient(90deg, #f0f2f5 25%, #e8eaf0 50%, #f0f2f5 75%);
+      background-size: 200% 100%;
+      animation: cropShimmer 1.4s infinite;
+      border-radius: 7px;
+    }
+    .issue-crop-wrap.loaded::before { display: none; }
+    @keyframes cropShimmer {
+      0%   { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+    .issue-crop-wrap.expected:hover { border-color: #93c5fd; box-shadow: 0 0 0 2px #dbeafe; }
+    .issue-crop-wrap.actual:hover   { border-color: #fca5a5; box-shadow: 0 0 0 2px #fee2e2; }
+    .issue-crop-wrap.diff:hover     { border-color: #fcd34d; box-shadow: 0 0 0 2px #fef3c7; }
+    .issue-crop-img {
+      width: 100%; display: block; position: relative; z-index: 2;
+      object-fit: contain; border-radius: 6px;
+    }
+    .issue-crop-no-img {
+      position: relative; z-index: 2;
+      width: 100%; min-height: 80px;
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px;
+      font-size: 12px; color: #9ca3af;
+      border-radius: 6px;
+    }
+    .issue-crop-no-img svg { opacity: .4; }
+
+    /* Suggested fix */
+    .issue-fix {
+      margin-top: 12px;
+      background: #f0fdf4; border: 1px solid #bbf7d0;
+      border-radius: 8px; padding: 10px 14px;
+    }
+    .issue-fix-label {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.7px; color: #059669; display: block; margin-bottom: 4px;
+    }
+    .issue-fix-text { font-size: 12px; color: #065f46; line-height: 1.55; }
     .pass-banner {
       background: #f0fdf4;
       border: 1.5px solid #bbf7d0;
@@ -1700,16 +1789,71 @@ function showVQAPage(idx) {
   }
 
   document.getElementById("vqa-issue-list").innerHTML = issues.map((iss, i) => {
-    const sev = (iss.severity || "low").toLowerCase();
+    const sev     = (iss.severity || "low").toLowerCase();
+    const diffPct = iss.diff_percent || 0;
+    const diffCls = diffPct >= 40 ? "high-diff" : diffPct >= 15 ? "medium-diff" : "";
+
+    // URL takes priority (served from disk); fall back to inline base64 if available
+    const resolveSrc = (url, b64) =>
+      url ? url : (b64 ? `data:image/jpeg;base64,${b64}` : "");
+
+    const makeCrop = (url, b64, label, cls) => {
+      const src = resolveSrc(url, b64);
+      const uid = `crop-${i}-${cls.split(" ")[0]}`;
+      const imgHtml = src ? `
+        <img id="${uid}" class="issue-crop-img" src="${src}" alt="${label}" loading="lazy"
+          onload="this.closest('.issue-crop-wrap').classList.add('loaded')"
+          onerror="this.style.display='none';this.closest('.issue-crop-wrap').classList.add('loaded');document.getElementById('${uid}-err').style.display='flex'" />
+        <div id="${uid}-err" class="issue-crop-no-img" style="display:none">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 9 5-5 4 4 4-4 5 5"/><circle cx="8.5" cy="13.5" r="1.5"/></svg>
+          Unavailable
+        </div>` : `
+        <div class="issue-crop-no-img">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m3 9 5-5 4 4 4-4 5 5"/></svg>
+          No screenshot
+        </div>`;
+      return `
+        <div class="issue-crop-box">
+          <div class="issue-crop-header">
+            <span class="issue-crop-label ${cls.split(" ")[0]}">${label}</span>
+            ${src ? `<button class="issue-crop-zoom" onclick="openLightboxSrc('${src}')" title="View fullscreen">&#x2922;</button>` : ""}
+          </div>
+          <div class="issue-crop-wrap ${cls}${src ? "" : " loaded"}"${src ? ` onclick="openLightboxSrc('${src}')"` : ""}>
+            ${imgHtml}
+          </div>
+        </div>`;
+    };
+
+    const hasAny  = iss.expected_screenshot_url || iss.expected_crop_b64 ||
+                    iss.actual_screenshot_url   || iss.actual_crop_b64;
+    const hasDiff = iss.diff_screenshot_url || iss.diff_crop_b64;
+
+    const crops = hasAny ? `
+      <div class="issue-crops">
+        ${makeCrop(iss.expected_screenshot_url, iss.expected_crop_b64, "Expected (Figma)", "expected")}
+        ${makeCrop(iss.actual_screenshot_url,   iss.actual_crop_b64,   "Actual (Live)",    "actual")}
+        ${hasDiff ? makeCrop(iss.diff_screenshot_url, iss.diff_crop_b64, "Diff Heatmap", "diff-lbl diff") : ""}
+      </div>` : "";
+
+    const fix = iss.suggested_fix ? `
+      <div class="issue-fix">
+        <span class="issue-fix-label">Suggested Fix</span>
+        <span class="issue-fix-text">${escHtml(iss.suggested_fix)}</span>
+      </div>` : "";
+
     return `
       <div class="issue-card ${sev}" id="issue-card-${i}">
-        <div class="issue-region">Region ${iss.region_index || i+1} · ${iss.diff_percent || 0}% diff</div>
-        <div class="issue-card-top">
-          <span class="badge ${sev}">${iss.severity || "Low"}</span>
-          <span class="issue-element">${escHtml(iss.element || "Unknown element")}</span>
+        <div class="issue-header">
+          <div class="issue-header-left">
+            <span class="badge ${sev}">${iss.severity || "Low"}</span>
+            <span class="issue-element">${escHtml(iss.element || "Unknown element")}</span>
+          </div>
+          <span class="issue-diff-badge ${diffCls}">Region ${iss.region_index || i+1} &middot; ${diffPct}% diff</span>
         </div>
         <div class="issue-desc">${escHtml(iss.description || "")}</div>
-        ${iss.user_impact ? `<div class="issue-impact">User impact: ${escHtml(iss.user_impact)}</div>` : ""}
+        ${iss.user_impact ? `<div class="issue-impact">&#x26A0; User impact: ${escHtml(iss.user_impact)}</div>` : ""}
+        ${crops}
+        ${fix}
       </div>`;
   }).join("");
 }
@@ -1742,6 +1886,11 @@ function exportVQAReport() {
     delete p.live_image_b64;
     delete p.diff_image_b64;
     delete p.diff_mask_b64;
+    (p.issues || []).forEach(iss => {
+      delete iss.expected_crop_b64;
+      delete iss.actual_crop_b64;
+      delete iss.diff_crop_b64;
+    });
   });
   triggerDownload(JSON.stringify(exportData, null, 2), "testrix_visual_qa_report.json", "application/json");
 }
@@ -1960,6 +2109,11 @@ function exportCrawlReport() {
 /* ── Lightbox ── */
 function openLightbox(imgId) {
   const src = document.getElementById(imgId).src;
+  if (!src) return;
+  document.getElementById("lightbox-img").src = src;
+  document.getElementById("lightbox").classList.add("open");
+}
+function openLightboxSrc(src) {
   if (!src) return;
   document.getElementById("lightbox-img").src = src;
   document.getElementById("lightbox").classList.add("open");
