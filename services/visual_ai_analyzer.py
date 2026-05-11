@@ -20,11 +20,17 @@ _SYSTEM_PROMPT = (
 )
 
 
+_client: OpenAI | None = None
+
+
 def _get_client() -> OpenAI:
-    key = os.environ.get("GROQ_API_KEY", "")
-    if not key:
-        raise ValueError("GROQ_API_KEY is not set. Add it to your .env file.")
-    return OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
+    global _client
+    if _client is None:
+        key = os.environ.get("GROQ_API_KEY", "")
+        if not key:
+            raise ValueError("GROQ_API_KEY is not set. Add it to your .env file.")
+        _client = OpenAI(api_key=key, base_url="https://api.groq.com/openai/v1")
+    return _client
 
 
 def _encode_image(img_bytes: bytes, max_dim: int = _MAX_IMAGE_DIM) -> str:

@@ -2,8 +2,6 @@ fastapi
 uvicorn
 openai
 python-dotenv
-pypdf
-python-docx
 langchain
 langchain-community
 faiss-cpu

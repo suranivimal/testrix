@@ -90,11 +90,12 @@ async def run_visual_qa(
             # AI analysis (only if there are diff regions)
             if compare_result.regions:
                 await _progress(job_id, "running", f"Analysing {page_name} with AI...")
-                issues = analyze(
-                    figma_bytes=figma_frame["image_bytes"],
-                    live_bytes=shopify_page["screenshot"],
-                    compare_result=compare_result,
-                    page_name=page_name,
+                issues = await run_in_threadpool(
+                    analyze,
+                    figma_frame["image_bytes"],
+                    shopify_page["screenshot"],
+                    compare_result,
+                    page_name,
                 )
                 issues = await classify_all(issues)
             else:

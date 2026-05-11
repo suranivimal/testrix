@@ -159,8 +159,9 @@ def _build_extras_block(categories: list[str], kind: str) -> str:
 
 
 def bug_analysis_prompt(bug: str, context=None) -> str:
+    context_text = "\n".join(context) if isinstance(context, list) else (context or "")
     context_block = (
-        f"\nRelevant knowledge-base context:\n{context}\n" if context else ""
+        f"\nRelevant knowledge-base context:\n{context_text}\n" if context_text else ""
     )
     categories = _detect_categories(bug)
     cat_label = ", ".join(c.upper() for c in categories) if categories else "GENERAL"
@@ -268,8 +269,9 @@ Fill every placeholder with real content derived from the bug description.
 
 
 def test_case_prompt(feature: str, context=None) -> str:
+    context_text = "\n".join(context) if isinstance(context, list) else (context or "")
     context_block = (
-        f"\nRelevant knowledge-base context:\n{context}\n" if context else ""
+        f"\nRelevant knowledge-base context:\n{context_text}\n" if context_text else ""
     )
     categories = _detect_categories(feature)
     cat_label = ", ".join(c.upper() for c in categories) if categories else "GENERAL"

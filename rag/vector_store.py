@@ -1,5 +1,6 @@
 import os
 import logging
+import threading
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from rag.data_loader import load_data
@@ -7,6 +8,7 @@ from rag.data_loader import load_data
 logger = logging.getLogger(__name__)
 
 _db = None
+_db_lock = threading.Lock()
 _INDEX_PATH = "faiss_index"
 
 
@@ -14,6 +16,9 @@ def _get_db():
     global _db
     if _db is not None:
         return _db
+    with _db_lock:
+        if _db is not None:
+            return _db
 
     embedding = HuggingFaceEmbeddings()
 

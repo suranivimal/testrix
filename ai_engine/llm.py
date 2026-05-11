@@ -2,7 +2,6 @@ import os
 import logging
 from openai import AsyncOpenAI
 from dotenv import load_dotenv
-from fastapi import HTTPException
 
 load_dotenv()
 
@@ -32,4 +31,4 @@ async def ask_ai(prompt: str) -> str:
         return content
     except Exception as e:
         logger.error(f"LLM call failed: {e}")
-        raise HTTPException(status_code=502, detail=f"AI service error: {str(e)}")
+        raise RuntimeError(f"AI service error: {str(e)}") from e
